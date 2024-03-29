@@ -15,6 +15,7 @@ data Value where
     VVoid :: Value
     VFunc :: [Arg] -> Block -> Env -> Value
     VArray :: Array Integer Value -> Value
+    VUninitialized :: Value
 
 instance Eq Value where
     VInt i == VInt j = i == j
@@ -32,10 +33,11 @@ instance Show Value where
     show VVoid = "<void>"
     show (VFunc{}) = "<function>"
     show (VArray a) = show a
+    show VUninitialized = "<uninitialized>"
 
 data EvaluatorStateFlag where
     ESFNone :: EvaluatorStateFlag
-    ESFReturn :: EvaluatorStateFlag
+    ESFReturn :: Value -> EvaluatorStateFlag
     ESFContinue :: EvaluatorStateFlag
     ESFBreak :: EvaluatorStateFlag
 
