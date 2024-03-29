@@ -9,29 +9,29 @@ import Data.Map as Map
 import Parser.Abs
 
 data Value where
-    EvInt :: Integer -> Value
-    EvBool :: Bool -> Value
-    EvChar :: Char -> Value
-    EvVoid :: Value
-    EvFunc :: [Arg] -> Block -> Env -> Value
-    EvArray :: Array Integer Value -> Value
+    VInt :: Integer -> Value
+    VBool :: Bool -> Value
+    VChar :: Char -> Value
+    VVoid :: Value
+    VFunc :: [Arg] -> Block -> Env -> Value
+    VArray :: Array Integer Value -> Value
 
 instance Eq Value where
-    EvInt i == EvInt j = i == j
-    EvBool b == EvBool c = b == c
-    EvChar c == EvChar d = c == d
-    EvVoid == EvVoid = True
-    EvFunc{} == EvFunc{} = False
-    EvArray a == EvArray b = a == b
+    VInt i == VInt j = i == j
+    VBool b == VBool c = b == c
+    VChar c == VChar d = c == d
+    VVoid == VVoid = True
+    VFunc{} == VFunc{} = False
+    VArray a == VArray b = a == b
     _ == _ = False
 
 instance Show Value where
-    show (EvInt i) = show i
-    show (EvBool b) = show b
-    show (EvChar c) = show c
-    show EvVoid = "<void>"
-    show (EvFunc{}) = "<function>"
-    show (EvArray a) = show a
+    show (VInt i) = show i
+    show (VBool b) = show b
+    show (VChar c) = show c
+    show VVoid = "<void>"
+    show (VFunc{}) = "<function>"
+    show (VArray a) = show a
 
 data EvaluatorStateFlag where
     ESFNone :: EvaluatorStateFlag
