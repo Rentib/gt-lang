@@ -2,15 +2,14 @@ entrypoints     TranslationUnit ;
 
 Program.        TranslationUnit ::= [Decl] ;
 
-coercions       Type 1 ;
-TInt.           Type1 ::= "int" ;
-TBool.          Type1 ::= "bool" ;
-TChar.          Type1 ::= "char" ;
-TVoid.          Type1 ::= "void" ;
-TConst.         Type1 ::= "const" Type ;
-TFunc.          Type1 ::= "(" [Type] ")" "->" Type ;
-TArray.         Type  ::= Type1 "[" "]" ;
-separator       Type "," ;
+TInt.           Type ::= "int" ;
+TBool.          Type ::= "bool" ;
+TChar.          Type ::= "char" ;
+TVoid.          Type ::= "void" ;
+TConst.         Type ::= "const" Type ;
+TFunc.          Type ::= "(" [Type] ")" "->" Type ;
+TArray.         Type ::= "[" Type "]" ;
+separator       Type  "," ;
 
 PArgVal.        Arg ::= Ident ":" Type ;
 PArgRef.        Arg ::= "&" Ident ":" Type ;

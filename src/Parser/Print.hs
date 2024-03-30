@@ -145,13 +145,13 @@ instance Print (Parser.Abs.TranslationUnit' a) where
 
 instance Print (Parser.Abs.Type' a) where
   prt i = \case
-    Parser.Abs.TInt _ -> prPrec i 1 (concatD [doc (showString "int")])
-    Parser.Abs.TBool _ -> prPrec i 1 (concatD [doc (showString "bool")])
-    Parser.Abs.TChar _ -> prPrec i 1 (concatD [doc (showString "char")])
-    Parser.Abs.TVoid _ -> prPrec i 1 (concatD [doc (showString "void")])
-    Parser.Abs.TConst _ type_ -> prPrec i 1 (concatD [doc (showString "const"), prt 0 type_])
-    Parser.Abs.TFunc _ types type_ -> prPrec i 1 (concatD [doc (showString "("), prt 0 types, doc (showString ")"), doc (showString "->"), prt 0 type_])
-    Parser.Abs.TArray _ type_ -> prPrec i 0 (concatD [prt 1 type_, doc (showString "["), doc (showString "]")])
+    Parser.Abs.TInt _ -> prPrec i 0 (concatD [doc (showString "int")])
+    Parser.Abs.TBool _ -> prPrec i 0 (concatD [doc (showString "bool")])
+    Parser.Abs.TChar _ -> prPrec i 0 (concatD [doc (showString "char")])
+    Parser.Abs.TVoid _ -> prPrec i 0 (concatD [doc (showString "void")])
+    Parser.Abs.TConst _ type_ -> prPrec i 0 (concatD [doc (showString "const"), prt 0 type_])
+    Parser.Abs.TFunc _ types type_ -> prPrec i 0 (concatD [doc (showString "("), prt 0 types, doc (showString ")"), doc (showString "->"), prt 0 type_])
+    Parser.Abs.TArray _ type_ -> prPrec i 0 (concatD [doc (showString "["), prt 0 type_, doc (showString "]")])
 
 instance Print [Parser.Abs.Type' a] where
   prt _ [] = concatD []
