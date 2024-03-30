@@ -183,22 +183,20 @@ instance Evaluator Expr where
             OpNeq _ -> v1 /= v2
     eval (EAnd _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then eval e2 else pure v1
     eval (EOr _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then pure v1 else eval e2
-    eval (EAssign pos e1 _ e2) = do
-        -- TODO: implement properly
-        v2 <- eval e2
-        case e1 of
-            EIdent _ x -> do
-                modify $ esUpdate x v2
-                pure v2
-            EIndex _ (EIdent _ x) idx -> do
-                v1 <- gets $ esGet x
-                i <- eval idx
-                case (v1, i) of
-                    (VArray a, VInt i') -> do
-                        let a' = a // [(i', v2)]
-                        modify $ esUpdate x (VArray a')
-                        pure v2
-                    _ | otherwise -> throwError $ UnknownRuntimeGTException pos
+    eval (EAssign _ (EIdent _ x) _ e) = do
+        v <- eval e
+        modify $ esUpdate x v
+        pure v
+    eval (EAssign pos (EIndex _ (EIdent _ x) idx) _ e) = do
+        arr <- gets $ esGet x
+        i <- eval idx
+        v <- eval e
+        case (arr, i) of
+            (VArray a, VInt i') -> do
+                let a' = a // [(i', v)]
+                modify $ esUpdate x (VArray a')
+                pure v
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
+    eval (EAssign pos _ _ _) = throwError $ UnknownRuntimeGTException pos
     eval (ELambda _ args _ block) = gets (VFunc args block . env)
     eval (EEmpty _) = pure VVoid
