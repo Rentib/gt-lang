@@ -46,30 +46,52 @@ instance Evaluator Decl where
         modify $ esNew f (VFunc args block (env es))
         pure VVoid
 
+evalIfNoFlag :: EvalM -> EvalM
+evalIfNoFlag m = do
+    es <- get
+    case flag es of
+        ESFNone -> m
+        _ | otherwise -> pure VVoid
+
 instance Evaluator Instr where
-    eval (IBlock _ block) = eval block
-    eval (IExpr _ e) = eval e
+    eval (IBlock _ block) = evalIfNoFlag $ eval block
+    eval (IExpr _ e) = evalIfNoFlag $ eval e
     eval (IIf _ e i) = do
         v <- eval e
         when (v == VBool True) $ void $ eval i
         pure VVoid
-    eval (IIfElse _ e i1 i2) = do
+    eval (IIfElse _ e i1 i2) = evalIfNoFlag $ do
         v <- eval e
         void $ if v == VBool True then eval i1 else eval i2
         pure VVoid
-    eval (IWhile pos e i) = do
+    eval (IWhile pos e i) = evalIfNoFlag $ do
         v <- eval e
         if v == VBool True
             then do
                 void $ eval i
-                eval (IWhile pos e i)
+                es <- get
+                case flag es of
+                    ESFContinue -> do
+                        put $ es{flag = ESFNone}
+                        eval (IWhile pos e i)
+                    ESFBreak -> do
+                        put $ es{flag = ESFNone}
+                        pure VVoid
+                    _ | otherwise -> eval (IWhile pos e i)
             else pure VVoid
-    eval (IDo pos i e) = eval i >> eval (IWhile pos e i)
+    eval (IDo pos i e) = evalIfNoFlag $ eval i >> eval (IWhile pos e i)
     eval (IFor pos e1 e2 e3 i) =
-        eval e1 >> eval (IWhile pos e2 (IBlock pos (PBlock pos [] [i, IExpr pos e3])))
-    eval (IContinue pos) = throwError $ NotImplementedGTException pos
-    eval (IBreak pos) = throwError $ NotImplementedGTException pos
-    eval (IReturn _ e) = do
+        evalIfNoFlag $
+            eval e1 >> eval (IWhile pos e2 (IBlock pos (PBlock pos [] [i, IExpr pos e3])))
+    eval (IContinue _) = evalIfNoFlag $ do
+        es <- get
+        put $ es{flag = ESFContinue}
+        pure VVoid
+    eval (IBreak _) = evalIfNoFlag $ do
+        es <- get
+        put $ es{flag = ESFBreak}
+        pure VVoid
+    eval (IReturn _ e) = evalIfNoFlag $ do
         es <- get
         v <- eval e
         put $ es{flag = ESFReturn v}
