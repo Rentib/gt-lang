@@ -111,7 +111,7 @@ instance Evaluator Expr where
                 OpPlus _ -> pure $ VInt $ n1 + n2
                 OpMinus _ -> pure $ VInt $ n1 - n2
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
-    eval (ERel pos e1 op e2) = do
+    eval (ERel _ e1 op e2) = do
         v1 <- eval e1
         v2 <- eval e2
         let cmp f (VInt n1) (VInt n2) = VBool $ f n1 n2
@@ -121,7 +121,12 @@ instance Evaluator Expr where
             OpLE _ -> pure $ cmp (<=) v1 v2
             OpGT _ -> pure $ cmp (>) v1 v2
             OpGE _ -> pure $ cmp (>=) v1 v2
-    eval (EEq pos e1 op e2) = throwError $ NotImplementedGTException pos
+    eval (EEq _ e1 op e2) = do
+        v1 <- eval e1
+        v2 <- eval e2
+        case op of
+            OpEq _ -> pure $ VBool $ v1 == v2
+            OpNeq _ -> pure $ VBool $ v1 /= v2
     eval (EAnd pos e1 e2) = throwError $ NotImplementedGTException pos
     eval (EOr pos e1 e2) = throwError $ NotImplementedGTException pos
     eval (EAssign pos e1 _ e2) = do
