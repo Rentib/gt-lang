@@ -4,6 +4,7 @@ module Evaluator.Evaluator where
 
 import Control.Monad.Except
 import Control.Monad.State
+import Data.Array
 
 import Common.Exceptions
 import Evaluator.Datatypes
@@ -74,12 +75,15 @@ instance Evaluator Instr where
 evalBuiltin :: Expr -> [Expr] -> EvalM -> EvalM
 evalBuiltin (EIdent _ (Ident "print")) args _ =
     mapM eval args >>= \vs -> liftIO $ mapM_ (putStr . show) vs >> pure VVoid
+evalBuiltin (EIdent _ (Ident "malloc")) [ELitInt _ n] _ =
+    return $ VArray $ array (0, n - 1) [(i, VUninitialized) | i <- [0 .. (n - 1)]]
 evalBuiltin _ _ em = em
 
 instance Evaluator Expr where
     eval (ELitInt _ n) = pure $ VInt n
     eval (ELitChar _ c) = pure $ VChar c
-    eval (ELitString pos s) = throwError $ NotImplementedGTException pos
+    eval (ELitString _ s) =
+        pure $ VArray $ array (0, fromIntegral (length s - 1)) [(i, VChar c) | (i, c) <- zip [0 ..] s]
     eval (ELitTrue _) = pure $ VBool True
     eval (ELitFalse _) = pure $ VBool False
     eval (EIdent _ x) = gets $ esGet x

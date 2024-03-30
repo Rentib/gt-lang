@@ -41,7 +41,13 @@ instance Show Value where
     show (VChar c) = [c]
     show VVoid = "<void>"
     show (VFunc{}) = "<function>"
-    show (VArray a) = show a
+    show (VArray a) =
+        let e = Data.Array.elems a
+            isChar (VChar _) = True
+            isChar _ = False
+         in if all isChar e
+                then concatMap show e
+                else show e
     show VUninitialized = "<uninitialized>"
 
 data EvaluatorStateFlag where
