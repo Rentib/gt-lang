@@ -127,8 +127,8 @@ instance Evaluator Expr where
         case op of
             OpEq _ -> pure $ VBool $ v1 == v2
             OpNeq _ -> pure $ VBool $ v1 /= v2
-    eval (EAnd pos e1 e2) = throwError $ NotImplementedGTException pos
-    eval (EOr pos e1 e2) = throwError $ NotImplementedGTException pos
+    eval (EAnd _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then eval e2 else pure v1
+    eval (EOr _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then pure v1 else eval e2
     eval (EAssign pos e1 _ e2) = do
         v2 <- eval e2
         case e1 of
