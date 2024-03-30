@@ -56,8 +56,6 @@ transInstr x = case x of
   Parser.Abs.IIf _ expr instr -> failure x
   Parser.Abs.IIfElse _ expr instr1 instr2 -> failure x
   Parser.Abs.IWhile _ expr instr -> failure x
-  Parser.Abs.IDo _ instr expr -> failure x
-  Parser.Abs.IFor _ expr1 expr2 expr3 instr -> failure x
   Parser.Abs.IContinue _ -> failure x
   Parser.Abs.IBreak _ -> failure x
   Parser.Abs.IReturn _ expr -> failure x

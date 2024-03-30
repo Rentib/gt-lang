@@ -56,8 +56,6 @@ data Instr' a
     | IIf a (Expr' a) (Instr' a)
     | IIfElse a (Expr' a) (Instr' a) (Instr' a)
     | IWhile a (Expr' a) (Instr' a)
-    | IDo a (Instr' a) (Expr' a)
-    | IFor a (Expr' a) (Expr' a) (Expr' a) (Instr' a)
     | IContinue a
     | IBreak a
     | IReturn a (Expr' a)
@@ -164,8 +162,6 @@ instance HasPosition Instr where
     IIf p _ _ -> p
     IIfElse p _ _ _ -> p
     IWhile p _ _ -> p
-    IDo p _ _ -> p
-    IFor p _ _ _ _ -> p
     IContinue p -> p
     IBreak p -> p
     IReturn p _ -> p

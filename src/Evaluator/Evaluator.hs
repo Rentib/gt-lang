@@ -64,10 +64,6 @@ instance Evaluator Instr where
                     ESFBreak -> modify (esPutFlag ESFNone) >> pure VVoid
                     _ | otherwise -> eval (IWhile pos e i)
             else pure VVoid
-    eval (IDo pos i e) = evalIfNoFlag $ eval i >> eval (IWhile pos e i)
-    eval (IFor pos e1 e2 e3 i) =
-        evalIfNoFlag $
-            eval e1 >> eval (IWhile pos e2 (IBlock pos (PBlock pos [] [i, IExpr pos e3])))
     eval (IContinue _) = evalIfNoFlag $ modify (esPutFlag ESFContinue) >> pure VVoid
     eval (IBreak _) = evalIfNoFlag $ modify (esPutFlag ESFBreak) >> pure VVoid
     eval (IReturn _ e) = evalIfNoFlag $ eval e >>= \v -> modify (esPutFlag $ ESFReturn v) >> pure VVoid
