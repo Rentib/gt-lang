@@ -39,6 +39,7 @@ separator       Instr "" ;
 coercions       Expr 9 ;
 ELitInt.        Expr9 ::= Integer ;
 ELitChar.       Expr9 ::= Char ;
+ELitString.     Expr9 ::= String ;
 ELitTrue.       Expr9 ::= "true" ;
 ELitFalse.      Expr9 ::= "false" ;
 EIdent.         Expr9 ::= Ident ;
@@ -77,3 +78,6 @@ OpNeq.          EqOp ::= "!=" ;
 
 OpAssign.       AssignOp ::=  "=" ;
 -- TODO: add more assign operators
+
+comment         "//" ;
+comment         "/*" "*/" ;

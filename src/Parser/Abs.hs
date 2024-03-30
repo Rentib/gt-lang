@@ -67,6 +67,7 @@ type Expr = Expr' BNFC'Position
 data Expr' a
     = ELitInt a Integer
     | ELitChar a Char
+    | ELitString a String
     | ELitTrue a
     | ELitFalse a
     | EIdent a Ident
@@ -173,6 +174,7 @@ instance HasPosition Expr where
   hasPosition = \case
     ELitInt p _ -> p
     ELitChar p _ -> p
+    ELitString p _ -> p
     ELitTrue p -> p
     ELitFalse p -> p
     EIdent p _ -> p

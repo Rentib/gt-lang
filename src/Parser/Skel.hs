@@ -66,6 +66,7 @@ transExpr :: Show a => Parser.Abs.Expr' a -> Result
 transExpr x = case x of
   Parser.Abs.ELitInt _ integer -> failure x
   Parser.Abs.ELitChar _ char -> failure x
+  Parser.Abs.ELitString _ string -> failure x
   Parser.Abs.ELitTrue _ -> failure x
   Parser.Abs.ELitFalse _ -> failure x
   Parser.Abs.EIdent _ ident -> failure x

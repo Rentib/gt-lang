@@ -204,6 +204,7 @@ instance Print (Parser.Abs.Expr' a) where
   prt i = \case
     Parser.Abs.ELitInt _ n -> prPrec i 9 (concatD [prt 0 n])
     Parser.Abs.ELitChar _ c -> prPrec i 9 (concatD [prt 0 c])
+    Parser.Abs.ELitString _ str -> prPrec i 9 (concatD [printString str])
     Parser.Abs.ELitTrue _ -> prPrec i 9 (concatD [doc (showString "true")])
     Parser.Abs.ELitFalse _ -> prPrec i 9 (concatD [doc (showString "false")])
     Parser.Abs.EIdent _ id_ -> prPrec i 9 (concatD [prt 0 id_])
