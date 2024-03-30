@@ -230,7 +230,6 @@ instance Print (Parser.Abs.UnaryOp' a) where
     Parser.Abs.OpUnaryPlus _ -> prPrec i 0 (concatD [doc (showString "+")])
     Parser.Abs.OpUnaryMinus _ -> prPrec i 0 (concatD [doc (showString "-")])
     Parser.Abs.OpUnaryBang _ -> prPrec i 0 (concatD [doc (showString "!")])
-    Parser.Abs.OpUnaryTilde _ -> prPrec i 0 (concatD [doc (showString "~")])
 
 instance Print (Parser.Abs.MulOp' a) where
   prt i = \case
