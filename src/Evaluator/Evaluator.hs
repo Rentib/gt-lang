@@ -57,7 +57,13 @@ instance Evaluator Instr where
         v <- eval e
         void $ if v == VBool True then eval i1 else eval i2
         pure VVoid
-    eval (IWhile pos e i) = throwError $ NotImplementedGTException pos
+    eval (IWhile pos e i) = do
+        v <- eval e
+        if v == VBool True
+            then do
+                void $ eval i
+                eval (IWhile pos e i)
+            else pure VVoid
     eval (IDo pos i e) = throwError $ NotImplementedGTException pos
     eval (IFor pos e1 e2 e3 i) = throwError $ NotImplementedGTException pos
     eval (IContinue pos) = throwError $ NotImplementedGTException pos
@@ -108,7 +114,16 @@ instance Evaluator Expr where
                 OpPlus _ -> pure $ VInt $ n1 + n2
                 OpMinus _ -> pure $ VInt $ n1 - n2
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
-    eval (ERel pos e1 op e2) = throwError $ NotImplementedGTException pos
+    eval (ERel pos e1 op e2) = do
+        v1 <- eval e1
+        v2 <- eval e2
+        let cmp f (VInt n1) (VInt n2) = VBool $ f n1 n2
+            cmp _ _ _ = undefined
+        case op of
+            OpLT _ -> pure $ cmp (<) v1 v2
+            OpLE _ -> pure $ cmp (<=) v1 v2
+            OpGT _ -> pure $ cmp (>) v1 v2
+            OpGE _ -> pure $ cmp (>=) v1 v2
     eval (EEq pos e1 op e2) = throwError $ NotImplementedGTException pos
     eval (EAnd pos e1 e2) = throwError $ NotImplementedGTException pos
     eval (EOr pos e1 e2) = throwError $ NotImplementedGTException pos
