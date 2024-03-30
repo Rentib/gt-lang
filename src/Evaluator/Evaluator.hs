@@ -71,24 +71,57 @@ instance Evaluator Instr where
     eval (IBreak _) = evalIfNoFlag $ modify (esPutFlag ESFBreak) >> pure VVoid
     eval (IReturn _ e) = evalIfNoFlag $ eval e >>= \v -> modify (esPutFlag $ ESFReturn v) >> pure VVoid
 
+evalBuiltin :: Expr -> [Expr] -> EvalM -> EvalM
+evalBuiltin (EIdent _ (Ident "print")) args _ =
+    mapM eval args >>= \vs -> liftIO $ mapM_ (putStr . show) vs >> pure VVoid
+evalBuiltin _ _ em = em
+
 instance Evaluator Expr where
     eval (ELitInt _ n) = pure $ VInt n
     eval (ELitChar _ c) = pure $ VChar c
+    eval (ELitString pos s) = throwError $ NotImplementedGTException pos
     eval (ELitTrue _) = pure $ VBool True
     eval (ELitFalse _) = pure $ VBool False
     eval (EIdent _ x) = gets $ esGet x
     eval (EIndex pos e1 e2) = throwError $ NotImplementedGTException pos
-    eval (EApply pos e args) = do
-        -- TODO: implement properly
+    eval (EApply pos e args) = evalBuiltin e args $ do
         f <- eval e
-        (VFunc _ block _) <- case f of
+        (VFunc params block fenv) <- case f of
             VFunc{} -> pure f
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
-        void $ eval block
+        when (length params /= length args) $ throwError $ UnknownRuntimeGTException pos
         es <- get
-        pure $ case flag es of
-            ESFReturn v -> v
-            _ | otherwise -> VVoid
+        -- gets location of argument (for passing by reference)
+        let getLoc (EIdent _ x) = Just $ envGet x (env es)
+            getLoc _ = Nothing
+        let esPutArg :: (Arg, Value, Maybe Loc) -> EvalM
+            esPutArg (PArgRef _ x _, _, Just l) =
+                get >>= \es' -> put (es'{env = envPut x l (env es')}) >> pure VVoid
+            esPutArg (PArgVal _ x _, v, _) = modify (esNew x v) >> pure VVoid
+            esPutArg _ = throwError $ UnknownRuntimeGTException pos
+
+        -- evaluate arguments in current environment
+        arg_values <- mapM eval args
+        let arg_locs = map getLoc args
+        -- change environment and set up params
+        put $ es{env = fenv}
+        mapM_ esPutArg $ zip3 params arg_values arg_locs
+
+        -- recursion
+        void $ case e of
+            EIdent _ (Ident fname) -> modify (esNew (Ident fname) f)
+            _ | otherwise -> pure ()
+
+        void $ eval block
+        res <- gets esGetFlag
+        es' <- get
+        put $ es{store = store es'} -- TODO: check if it is correct
+
+        -- TODO: if there is no return, check if function should return void
+        case res of
+            ESFReturn v -> pure v
+            ESFNone -> pure VVoid
+            _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (EUOp pos op e) = do
         v <- eval e
         case op of
