@@ -73,7 +73,7 @@ instance Evaluator Instr where
 
 instance Evaluator Expr where
     eval (ELitInt _ n) = pure $ VInt n
-    eval (ELitChar pos c) = throwError $ NotImplementedGTException pos
+    eval (ELitChar _ c) = pure $ VChar c
     eval (ELitTrue _) = pure $ VBool True
     eval (ELitFalse _) = pure $ VBool False
     eval (EIdent _ x) = gets $ esGet x
