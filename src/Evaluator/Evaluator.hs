@@ -75,8 +75,11 @@ instance Evaluator Instr where
 evalBuiltin :: Expr -> [Expr] -> EvalM -> EvalM
 evalBuiltin (EIdent _ (Ident "print")) args _ =
     mapM eval args >>= \vs -> liftIO $ mapM_ (putStr . show) vs >> pure VVoid
-evalBuiltin (EIdent _ (Ident "malloc")) [ELitInt _ n] _ =
-    return $ VArray $ array (0, n - 1) [(i, VUninitialized) | i <- [0 .. (n - 1)]]
+evalBuiltin (EIdent pos (Ident "malloc")) [e] _ = do
+    v <- eval e
+    case v of
+        VInt n -> pure $ VArray $ array (0, n - 1) [(i, VUninitialized) | i <- [0 .. n - 1]]
+        _ | otherwise -> throwError $ UnknownRuntimeGTException pos
 evalBuiltin _ _ em = em
 
 instance Evaluator Expr where
@@ -87,7 +90,12 @@ instance Evaluator Expr where
     eval (ELitTrue _) = pure $ VBool True
     eval (ELitFalse _) = pure $ VBool False
     eval (EIdent _ x) = gets $ esGet x
-    eval (EIndex pos e1 e2) = throwError $ NotImplementedGTException pos
+    eval (EIndex pos e1 e2) = do
+        v1 <- eval e1
+        v2 <- eval e2
+        case (v1, v2) of
+            (VArray a, VInt i) -> pure $ a ! i
+            _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (EApply pos e args) = evalBuiltin e args $ do
         f <- eval e
         (VFunc params block fenv) <- case f of
@@ -176,12 +184,21 @@ instance Evaluator Expr where
     eval (EAnd _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then eval e2 else pure v1
     eval (EOr _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then pure v1 else eval e2
     eval (EAssign pos e1 _ e2) = do
+        -- TODO: implement properly
         v2 <- eval e2
         case e1 of
             EIdent _ x -> do
                 modify $ esUpdate x v2
                 pure v2
-            -- TODO: arrays
-            _ | otherwise -> throwError $ NotImplementedGTException pos
+            EIndex _ (EIdent _ x) idx -> do
+                v1 <- gets $ esGet x
+                i <- eval idx
+                case (v1, i) of
+                    (VArray a, VInt i') -> do
+                        let a' = a // [(i', v2)]
+                        modify $ esUpdate x (VArray a')
+                        pure v2
+                    _ | otherwise -> throwError $ UnknownRuntimeGTException pos
+            _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (ELambda _ args _ block) = gets (VFunc args block . env)
     eval (EEmpty _) = pure VVoid
