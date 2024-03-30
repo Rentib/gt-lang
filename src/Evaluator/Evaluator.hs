@@ -48,7 +48,7 @@ instance Evaluator Decl where
 
 instance Evaluator Instr where
     eval (IBlock _ block) = eval block
-    eval (IExpr pos e) = throwError $ NotImplementedGTException pos
+    eval (IExpr _ e) = eval e
     eval (IIf pos e i) = throwError $ NotImplementedGTException pos
     eval (IIfElse pos e i1 i2) = throwError $ NotImplementedGTException pos
     eval (IWhile pos e i) = throwError $ NotImplementedGTException pos
@@ -106,6 +106,13 @@ instance Evaluator Expr where
     eval (EEq pos e1 op e2) = throwError $ NotImplementedGTException pos
     eval (EAnd pos e1 e2) = throwError $ NotImplementedGTException pos
     eval (EOr pos e1 e2) = throwError $ NotImplementedGTException pos
-    eval (EAssign pos e1 op e2) = throwError $ NotImplementedGTException pos
+    eval (EAssign pos e1 _ e2) = do
+        v2 <- eval e2
+        case e1 of
+            EIdent _ x -> do
+                modify $ esUpdate x v2
+                pure v2
+            -- TODO: arrays
+            _ | otherwise -> throwError $ NotImplementedGTException pos
     eval (ELambda pos args t block) = throwError $ NotImplementedGTException pos
-    eval (EEmpty pos) = throwError $ NotImplementedGTException pos
+    eval (EEmpty _) = pure VVoid
