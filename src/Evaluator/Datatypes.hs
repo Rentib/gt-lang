@@ -38,7 +38,7 @@ instance Ord Value where
 instance Show Value where
     show (VInt i) = show i
     show (VBool b) = show b
-    show (VChar c) = show c
+    show (VChar c) = [c]
     show VVoid = "<void>"
     show (VFunc{}) = "<function>"
     show (VArray a) = show a
