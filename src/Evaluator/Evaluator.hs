@@ -30,17 +30,9 @@ instance Evaluator Block where
         pure VVoid
 
 instance Evaluator Decl where
-    eval (DNoInit _ x _) = do
-        modify $ esNew x VUninitialized
-        pure VVoid
-    eval (DInit _ x e) = do
-        v <- eval e
-        modify $ esNew x v
-        pure VVoid
-    eval (DConst _ x e) = do
-        v <- eval e
-        modify $ esNew x v
-        pure VVoid
+    eval (DNoInit _ x _) = modify (esNew x VUninitialized) >> pure VVoid
+    eval (DInit _ x e) = eval e >>= \v -> modify (esNew x v) >> pure VVoid
+    eval (DConst _ x e) = eval e >>= \v -> modify (esNew x v) >> pure VVoid
     eval (DFunc _ f args _ block) = do
         es <- get
         modify $ esNew f (VFunc args block (env es))
