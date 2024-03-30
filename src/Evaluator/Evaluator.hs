@@ -53,7 +53,10 @@ instance Evaluator Instr where
         v <- eval e
         when (v == VBool True) $ void $ eval i
         pure VVoid
-    eval (IIfElse pos e i1 i2) = throwError $ NotImplementedGTException pos
+    eval (IIfElse _ e i1 i2) = do
+        v <- eval e
+        void $ if v == VBool True then eval i1 else eval i2
+        pure VVoid
     eval (IWhile pos e i) = throwError $ NotImplementedGTException pos
     eval (IDo pos i e) = throwError $ NotImplementedGTException pos
     eval (IFor pos e1 e2 e3 i) = throwError $ NotImplementedGTException pos
