@@ -179,5 +179,5 @@ instance Evaluator Expr where
                 pure v2
             -- TODO: arrays
             _ | otherwise -> throwError $ NotImplementedGTException pos
-    eval (ELambda pos args t block) = throwError $ NotImplementedGTException pos
+    eval (ELambda _ args _ block) = gets (VFunc args block . env)
     eval (EEmpty _) = pure VVoid
