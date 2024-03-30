@@ -56,14 +56,10 @@ evalIfNoFlag m = do
 instance Evaluator Instr where
     eval (IBlock _ block) = evalIfNoFlag $ eval block
     eval (IExpr _ e) = evalIfNoFlag $ eval e
-    eval (IIf _ e i) = do
-        v <- eval e
-        when (v == VBool True) $ void $ eval i
-        pure VVoid
+    eval (IIf _ e i) = evalIfNoFlag $ do
+        eval e >>= \v -> if v == VBool True then eval i else pure VVoid
     eval (IIfElse _ e i1 i2) = evalIfNoFlag $ do
-        v <- eval e
-        void $ if v == VBool True then eval i1 else eval i2
-        pure VVoid
+        eval e >>= \v -> if v == VBool True then eval i1 else eval i2
     eval (IWhile pos e i) = evalIfNoFlag $ do
         v <- eval e
         if v == VBool True
@@ -71,31 +67,17 @@ instance Evaluator Instr where
                 void $ eval i
                 es <- get
                 case flag es of
-                    ESFContinue -> do
-                        put $ es{flag = ESFNone}
-                        eval (IWhile pos e i)
-                    ESFBreak -> do
-                        put $ es{flag = ESFNone}
-                        pure VVoid
+                    ESFContinue -> modify (esPutFlag ESFNone) >> eval (IWhile pos e i)
+                    ESFBreak -> modify (esPutFlag ESFNone) >> pure VVoid
                     _ | otherwise -> eval (IWhile pos e i)
             else pure VVoid
     eval (IDo pos i e) = evalIfNoFlag $ eval i >> eval (IWhile pos e i)
     eval (IFor pos e1 e2 e3 i) =
         evalIfNoFlag $
             eval e1 >> eval (IWhile pos e2 (IBlock pos (PBlock pos [] [i, IExpr pos e3])))
-    eval (IContinue _) = evalIfNoFlag $ do
-        es <- get
-        put $ es{flag = ESFContinue}
-        pure VVoid
-    eval (IBreak _) = evalIfNoFlag $ do
-        es <- get
-        put $ es{flag = ESFBreak}
-        pure VVoid
-    eval (IReturn _ e) = evalIfNoFlag $ do
-        es <- get
-        v <- eval e
-        put $ es{flag = ESFReturn v}
-        pure VVoid
+    eval (IContinue _) = evalIfNoFlag $ modify (esPutFlag ESFContinue) >> pure VVoid
+    eval (IBreak _) = evalIfNoFlag $ modify (esPutFlag ESFBreak) >> pure VVoid
+    eval (IReturn _ e) = evalIfNoFlag $ eval e >>= \v -> modify (esPutFlag $ ESFReturn v) >> pure VVoid
 
 instance Evaluator Expr where
     eval (ELitInt _ n) = pure $ VInt n

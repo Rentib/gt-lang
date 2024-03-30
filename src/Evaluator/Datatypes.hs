@@ -91,3 +91,9 @@ esUpdate x v EvaluatorState{..} = EvaluatorState env store' flag
 
 esGet :: Ident -> EvaluatorState -> Value
 esGet x EvaluatorState{..} = storeGet (envGet x env) store
+
+esGetFlag :: EvaluatorState -> EvaluatorStateFlag
+esGetFlag EvaluatorState{..} = flag
+
+esPutFlag :: EvaluatorStateFlag -> EvaluatorState -> EvaluatorState
+esPutFlag flag' EvaluatorState{..} = EvaluatorState env store flag'
