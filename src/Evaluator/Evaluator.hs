@@ -73,8 +73,27 @@ instance Evaluator Expr where
             ESFReturn v -> v
             _ | otherwise -> VVoid
     eval (EUOp pos op e) = throwError $ NotImplementedGTException pos
-    eval (EMul pos e1 op e2) = throwError $ NotImplementedGTException pos
-    eval (EAdd pos e1 op e2) = throwError $ NotImplementedGTException pos
+    eval (EMul pos e1 op e2) = do
+        v1 <- eval e1
+        v2 <- eval e2
+        case (v1, v2) of
+            (VInt n1, VInt n2) -> case op of
+                OpTimes _ -> pure $ VInt $ n1 * n2
+                OpDiv pos' -> do
+                    when (n2 == 0) $ throwError $ DivideByZeroGTException pos'
+                    pure $ VInt $ n1 `div` n2
+                OpMod pos' -> do
+                    when (n2 == 0) $ throwError $ DivideByZeroGTException pos'
+                    pure $ VInt $ n1 `mod` n2
+            _ | otherwise -> throwError $ UnknownRuntimeGTException pos
+    eval (EAdd pos e1 op e2) = do
+        v1 <- eval e1
+        v2 <- eval e2
+        case (v1, v2) of
+            (VInt n1, VInt n2) -> case op of
+                OpPlus _ -> pure $ VInt $ n1 + n2
+                OpMinus _ -> pure $ VInt $ n1 - n2
+            _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (ERel pos e1 op e2) = throwError $ NotImplementedGTException pos
     eval (EEq pos e1 op e2) = throwError $ NotImplementedGTException pos
     eval (EAnd pos e1 e2) = throwError $ NotImplementedGTException pos
