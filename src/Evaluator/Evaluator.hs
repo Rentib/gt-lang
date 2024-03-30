@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Evaluator.Evaluator where
 
@@ -40,9 +41,8 @@ instance Evaluator Decl where
         pure VVoid
 
 evalIfNoFlag :: EvalM -> EvalM
-evalIfNoFlag m = do
-    es <- get
-    case flag es of
+evalIfNoFlag m =
+    gets esGetFlag >>= \case
         ESFNone -> m
         _ | otherwise -> pure VVoid
 
@@ -60,8 +60,7 @@ instance Evaluator Instr where
                 if v == VBool True
                     then do
                         void $ eval i
-                        es <- get
-                        case flag es of
+                        gets esGetFlag >>= \case
                             ESFContinue -> modify (esPutFlag ESFNone) >> eval e3 >> loop
                             ESFBreak -> modify (esPutFlag ESFNone) >> pure VVoid
                             _ | otherwise -> eval e3 >> loop
@@ -75,8 +74,7 @@ evalBuiltin :: Expr -> [Expr] -> EvalM -> EvalM
 evalBuiltin (EIdent _ (Ident "print")) args _ =
     mapM eval args >>= \vs -> liftIO $ mapM_ (putStr . show) vs >> pure VVoid
 evalBuiltin (EIdent pos (Ident "malloc")) [e] _ = do
-    v <- eval e
-    case v of
+    eval e >>= \case
         VInt n -> pure $ VArray $ array (0, n - 1) [(i, VUninitialized) | i <- [0 .. n - 1]]
         _ | otherwise -> throwError $ UnknownRuntimeGTException pos
 evalBuiltin _ _ em = em
