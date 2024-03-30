@@ -26,6 +26,15 @@ instance Eq Value where
     VArray a == VArray b = a == b
     _ == _ = False
 
+instance Ord Value where
+    VInt i <= VInt j = i <= j
+    VBool b <= VBool c = b <= c
+    VChar c <= VChar d = c <= d
+    VVoid <= VVoid = True
+    VFunc{} <= VFunc{} = False
+    VArray a <= VArray b = a <= b
+    _ <= _ = False
+
 instance Show Value where
     show (VInt i) = show i
     show (VBool b) = show b

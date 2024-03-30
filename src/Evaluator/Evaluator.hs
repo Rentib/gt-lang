@@ -118,26 +118,24 @@ instance Evaluator Expr where
         v1 <- eval e1
         v2 <- eval e2
         case (v1, v2) of
-            (VInt n1, VInt n2) -> case op of
-                OpPlus _ -> pure $ VInt $ n1 + n2
-                OpMinus _ -> pure $ VInt $ n1 - n2
+            (VInt n1, VInt n2) -> pure $ VInt $ case op of
+                OpPlus _ -> n1 + n2
+                OpMinus _ -> n1 - n2
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (ERel _ e1 op e2) = do
         v1 <- eval e1
         v2 <- eval e2
-        let cmp f (VInt n1) (VInt n2) = VBool $ f n1 n2
-            cmp _ _ _ = undefined
-        case op of
-            OpLT _ -> pure $ cmp (<) v1 v2
-            OpLE _ -> pure $ cmp (<=) v1 v2
-            OpGT _ -> pure $ cmp (>) v1 v2
-            OpGE _ -> pure $ cmp (>=) v1 v2
+        pure $ VBool $ case op of
+            OpLT _ -> v1 < v2
+            OpLE _ -> v1 <= v2
+            OpGT _ -> v1 > v2
+            OpGE _ -> v1 >= v2
     eval (EEq _ e1 op e2) = do
         v1 <- eval e1
         v2 <- eval e2
-        case op of
-            OpEq _ -> pure $ VBool $ v1 == v2
-            OpNeq _ -> pure $ VBool $ v1 /= v2
+        pure $ VBool $ case op of
+            OpEq _ -> v1 == v2
+            OpNeq _ -> v1 /= v2
     eval (EAnd _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then eval e2 else pure v1
     eval (EOr _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then pure v1 else eval e2
     eval (EAssign pos e1 _ e2) = do
