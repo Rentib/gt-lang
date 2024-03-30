@@ -13,7 +13,6 @@ syn case match
 syn region gtComment start="/\*" end="\*/" contains=gtTodo
 syn match gtComment "//.*$" contains=gtTodo
 syn match gtComment "^\s*#.*$" contains=gtTodo
-syn keyword gtTodo TODO FIXME XXX DEBUG NOTE contained
 
 syn region gtString		start=+"+  skip=+\\\\\|\\"+  end=+"+
 syn region gtString		start=+'+  skip=+\\\\\|\\'+  end=+'+
@@ -30,7 +29,7 @@ syn keyword gtRepeat while
 syn match gtOperator "+"
 syn match gtOperator "-"
 syn match gtOperator "*"
-syn match gtOperator "\/\(.*\/\)\@!"
+syn match gtOperator "\/\(.*[\/\*]\)\@!"
 syn match gtOperator "%"
 syn match gtOperator "!"
 syn match gtOperator "&&"
