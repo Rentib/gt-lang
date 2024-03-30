@@ -49,7 +49,10 @@ instance Evaluator Decl where
 instance Evaluator Instr where
     eval (IBlock _ block) = eval block
     eval (IExpr _ e) = eval e
-    eval (IIf pos e i) = throwError $ NotImplementedGTException pos
+    eval (IIf _ e i) = do
+        v <- eval e
+        when (v == VBool True) $ void $ eval i
+        pure VVoid
     eval (IIfElse pos e i1 i2) = throwError $ NotImplementedGTException pos
     eval (IWhile pos e i) = throwError $ NotImplementedGTException pos
     eval (IDo pos i e) = throwError $ NotImplementedGTException pos
@@ -65,8 +68,8 @@ instance Evaluator Instr where
 instance Evaluator Expr where
     eval (ELitInt _ n) = pure $ VInt n
     eval (ELitChar pos c) = throwError $ NotImplementedGTException pos
-    eval (ELitTrue pos) = throwError $ NotImplementedGTException pos
-    eval (ELitFalse pos) = throwError $ NotImplementedGTException pos
+    eval (ELitTrue _) = pure $ VBool True
+    eval (ELitFalse _) = pure $ VBool False
     eval (EIdent _ x) = gets $ esGet x
     eval (EIndex pos e1 e2) = throwError $ NotImplementedGTException pos
     eval (EApply pos e args) = do
