@@ -24,7 +24,7 @@ syn match gtBoolean "\<true\|false\>"
 syn match gtFunction "\<[a-zA-Z][a-zA-Z0-9_]*\s*("me=e-1
 
 syn keyword gtConditional if else
-syn keyword gtRepeat while
+syn keyword gtRepeat while for
 
 syn match gtOperator "+"
 syn match gtOperator "-"
@@ -46,7 +46,7 @@ syn match gtOperator "&"
 
 syn keyword gtKeyword return break continue var fn const
 
-syn keyword gtType int bool string void
+syn keyword gtType int bool char void
 
 syn match gtIgnore ";"
 syn match gtIgnore ","
