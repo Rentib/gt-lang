@@ -28,6 +28,7 @@ IExpr.          Instr ::= Expr ";" ;
 IIf.            Instr ::= "if" "(" Expr ")" Instr ;
 IIfElse.        Instr ::= "if" "(" Expr ")" Instr "else" Instr ;
 IWhile.         Instr ::= "while" "(" Expr ")" Instr ;
+IFor.           Instr ::= "for" "(" Expr ";" Expr ";" Expr ")" Instr ;
 IContinue.      Instr ::= "continue" ";" ;
 IBreak.         Instr ::= "break" ";" ;
 IReturn.        Instr ::= "return" Expr ";" ;

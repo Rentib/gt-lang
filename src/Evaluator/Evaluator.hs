@@ -53,17 +53,20 @@ instance Evaluator Instr where
         eval e >>= \v -> if v == VBool True then eval i else pure VVoid
     eval (IIfElse _ e i1 i2) = evalIfNoFlag $ do
         eval e >>= \v -> if v == VBool True then eval i1 else eval i2
-    eval (IWhile pos e i) = evalIfNoFlag $ do
-        v <- eval e
-        if v == VBool True
-            then do
-                void $ eval i
-                es <- get
-                case flag es of
-                    ESFContinue -> modify (esPutFlag ESFNone) >> eval (IWhile pos e i)
-                    ESFBreak -> modify (esPutFlag ESFNone) >> pure VVoid
-                    _ | otherwise -> eval (IWhile pos e i)
-            else pure VVoid
+    eval (IWhile pos e i) = eval $ IFor pos (EEmpty pos) e (EEmpty pos) i
+    eval (IFor _ e1 e2 e3 i) = evalIfNoFlag $ do
+        let loop = evalIfNoFlag $ do
+                v <- eval e2
+                if v == VBool True
+                    then do
+                        void $ eval i
+                        es <- get
+                        case flag es of
+                            ESFContinue -> modify (esPutFlag ESFNone) >> eval e3 >> loop
+                            ESFBreak -> modify (esPutFlag ESFNone) >> pure VVoid
+                            _ | otherwise -> eval e3 >> loop
+                    else pure VVoid
+        eval e1 >> loop
     eval (IContinue _) = evalIfNoFlag $ modify (esPutFlag ESFContinue) >> pure VVoid
     eval (IBreak _) = evalIfNoFlag $ modify (esPutFlag ESFBreak) >> pure VVoid
     eval (IReturn _ e) = evalIfNoFlag $ eval e >>= \v -> modify (esPutFlag $ ESFReturn v) >> pure VVoid

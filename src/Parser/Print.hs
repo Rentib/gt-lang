@@ -190,6 +190,7 @@ instance Print (Parser.Abs.Instr' a) where
     Parser.Abs.IIf _ expr instr -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 instr])
     Parser.Abs.IIfElse _ expr instr1 instr2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 instr1, doc (showString "else"), prt 0 instr2])
     Parser.Abs.IWhile _ expr instr -> prPrec i 0 (concatD [doc (showString "while"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 instr])
+    Parser.Abs.IFor _ expr1 expr2 expr3 instr -> prPrec i 0 (concatD [doc (showString "for"), doc (showString "("), prt 0 expr1, doc (showString ";"), prt 0 expr2, doc (showString ";"), prt 0 expr3, doc (showString ")"), prt 0 instr])
     Parser.Abs.IContinue _ -> prPrec i 0 (concatD [doc (showString "continue"), doc (showString ";")])
     Parser.Abs.IBreak _ -> prPrec i 0 (concatD [doc (showString "break"), doc (showString ";")])
     Parser.Abs.IReturn _ expr -> prPrec i 0 (concatD [doc (showString "return"), prt 0 expr, doc (showString ";")])
