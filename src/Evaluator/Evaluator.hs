@@ -64,8 +64,9 @@ instance Evaluator Instr where
                 void $ eval i
                 eval (IWhile pos e i)
             else pure VVoid
-    eval (IDo pos i e) = throwError $ NotImplementedGTException pos
-    eval (IFor pos e1 e2 e3 i) = throwError $ NotImplementedGTException pos
+    eval (IDo pos i e) = eval i >> eval (IWhile pos e i)
+    eval (IFor pos e1 e2 e3 i) =
+        eval e1 >> eval (IWhile pos e2 (IBlock pos (PBlock pos [] [i, IExpr pos e3])))
     eval (IContinue pos) = throwError $ NotImplementedGTException pos
     eval (IBreak pos) = throwError $ NotImplementedGTException pos
     eval (IReturn _ e) = do
