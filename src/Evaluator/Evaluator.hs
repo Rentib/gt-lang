@@ -30,9 +30,17 @@ instance Evaluator Block where
         pure VVoid
 
 instance Evaluator Decl where
-    eval (DNoInit pos x t) = throwError $ NotImplementedGTException pos
-    eval (DInit pos x e) = throwError $ NotImplementedGTException pos
-    eval (DConst pos x e) = throwError $ NotImplementedGTException pos
+    eval (DNoInit _ x _) = do
+        modify $ esNew x VUninitialized
+        pure VVoid
+    eval (DInit _ x e) = do
+        v <- eval e
+        modify $ esNew x v
+        pure VVoid
+    eval (DConst _ x e) = do
+        v <- eval e
+        modify $ esNew x v
+        pure VVoid
     eval (DFunc _ f args _ block) = do
         es <- get
         modify $ esNew f (VFunc args block (env es))
@@ -59,7 +67,7 @@ instance Evaluator Expr where
     eval (ELitChar pos c) = throwError $ NotImplementedGTException pos
     eval (ELitTrue pos) = throwError $ NotImplementedGTException pos
     eval (ELitFalse pos) = throwError $ NotImplementedGTException pos
-    eval (EIdent _ x) = gets (esGet x)
+    eval (EIdent _ x) = gets $ esGet x
     eval (EIndex pos e1 e2) = throwError $ NotImplementedGTException pos
     eval (EApply pos e args) = do
         -- TODO: implement properly
