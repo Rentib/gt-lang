@@ -37,8 +37,8 @@ instance Typechecker Block where
         pure TCInt
 
 instance Typechecker Decl where
-    tcheck (DNoInit pos _ _) = throwError $ NotImplementedGTException pos
-    tcheck (DInit pos _ _) = throwError $ NotImplementedGTException pos
+    tcheck (DNoInit _ x t) = modify (tsPut x (fromType t, TSUninitialized)) >> pure TCInt
+    tcheck (DInit _ x e) = tcheck e >>= \et -> modify (tsPut x (et, TSInitialized)) >> pure TCInt
     tcheck (DConst pos _ _) = throwError $ NotImplementedGTException pos
     tcheck (DFunc pos f args ret block) = do
         modify $ tsPut f (fromFunction args ret, TSInitialized)
