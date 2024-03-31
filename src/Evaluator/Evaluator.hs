@@ -79,6 +79,9 @@ evalBuiltin (EIdent pos (Ident "malloc")) [e] _ = do
         _ | otherwise -> throwError $ UnknownRuntimeGTException pos
 evalBuiltin _ _ em = em
 
+evalBinary :: Expr -> Expr -> ((Value, Value) -> EvalM) -> EvalM
+evalBinary e1 e2 f = eval e1 >>= \v1 -> eval e2 >>= \v2 -> f (v1, v2)
+
 checkBounds :: BNFC'Position -> Array Integer a -> Integer -> EvalM
 checkBounds pos a i =
     if i < 0 || i > fromIntegral (snd (bounds a))
@@ -94,9 +97,7 @@ instance Evaluator Expr where
     eval (ELitFalse _) = pure $ VBool False
     eval (EIdent _ x) = gets $ esGet x
     eval (EIndex pos e1 e2) = do
-        v1 <- eval e1
-        v2 <- eval e2
-        case (v1, v2) of
+        evalBinary e1 e2 $ \case
             (VArray a, VInt i) -> checkBounds pos a i >> pure (a ! i)
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (EApply pos e args) = evalBuiltin e args $ do
@@ -149,10 +150,8 @@ instance Evaluator Expr where
         eval e >>= \case
             VBool b -> pure $ VBool $ not b
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
-    eval (EMul pos e1 op e2) = do
-        v1 <- eval e1
-        v2 <- eval e2
-        case (v1, v2) of
+    eval (EMul pos e1 op e2) =
+        evalBinary e1 e2 $ \case
             (VInt n1, VInt n2) -> case op of
                 OpTimes _ -> pure $ VInt $ n1 * n2
                 OpDiv pos' -> do
@@ -162,28 +161,24 @@ instance Evaluator Expr where
                     when (n2 == 0) $ throwError $ DivideByZeroGTException pos'
                     pure $ VInt $ n1 `mod` n2
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
-    eval (EAdd pos e1 op e2) = do
-        v1 <- eval e1
-        v2 <- eval e2
-        case (v1, v2) of
+    eval (EAdd pos e1 op e2) =
+        evalBinary e1 e2 $ \case
             (VInt n1, VInt n2) -> pure $ VInt $ case op of
                 OpPlus _ -> n1 + n2
                 OpMinus _ -> n1 - n2
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
-    eval (ERel _ e1 op e2) = do
-        v1 <- eval e1
-        v2 <- eval e2
-        pure $ VBool $ case op of
-            OpLT _ -> v1 < v2
-            OpLE _ -> v1 <= v2
-            OpGT _ -> v1 > v2
-            OpGE _ -> v1 >= v2
-    eval (EEq _ e1 op e2) = do
-        v1 <- eval e1
-        v2 <- eval e2
-        pure $ VBool $ case op of
-            OpEq _ -> v1 == v2
-            OpNeq _ -> v1 /= v2
+    eval (ERel _ e1 op e2) =
+        evalBinary e1 e2 $ \(v1, v2) ->
+            pure $ VBool $ case op of
+                OpLT _ -> v1 < v2
+                OpLE _ -> v1 <= v2
+                OpGT _ -> v1 > v2
+                OpGE _ -> v1 >= v2
+    eval (EEq _ e1 op e2) =
+        evalBinary e1 e2 $ \(v1, v2) ->
+            pure $ VBool $ case op of
+                OpEq _ -> v1 == v2
+                OpNeq _ -> v1 /= v2
     eval (EAnd _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then eval e2 else pure v1
     eval (EOr _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then pure v1 else eval e2
     eval (EAssign _ (EIdent _ x) _ e) = eval e >>= \v -> modify (esUpdate x v) >> pure v
