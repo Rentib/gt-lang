@@ -80,8 +80,14 @@ instance Typechecker Instr where
         put $ ts{_inLoop = inLoop}
         pure TCVoid
     tcheck (IFor pos _ _ _ _) = throwError $ NotImplementedGTException pos
-    tcheck (IContinue pos) = throwError $ NotImplementedGTException pos
-    tcheck (IBreak pos) = throwError $ NotImplementedGTException pos
+    tcheck (IContinue pos) = do
+        inLoop <- gets _inLoop
+        unless inLoop $ throwError $ ContinueOutsideLoopGTException pos
+        pure TCVoid
+    tcheck (IBreak pos) = do
+        inLoop <- gets _inLoop
+        unless inLoop $ throwError $ BreakOutsideLoopGTException pos
+        pure TCVoid
     tcheck (IReturn pos e) = do
         ts <- get
         t <- tcheck e
