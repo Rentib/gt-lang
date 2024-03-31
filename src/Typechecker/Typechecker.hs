@@ -98,8 +98,20 @@ instance Typechecker Expr where
             Just (_, TSUninitialized) -> throwError $ UninitializedVariableGTException pos x
             Nothing -> throwError $ UndeclaredVariableGTException pos x
     tcheck (EIndex pos _ _) = throwError $ NotImplementedGTException pos
-    tcheck (EApply pos e args) = tcheckBuiltin pos e args $ do
-        throwError $ NotImplementedGTException pos
+    tcheck (EApply pos f args) =
+        tcheckBuiltin pos f args $
+            tcheck f >>= \case
+                TCFunc params ret -> do
+                    let (nargs, nparams) = (length args, length params)
+                    unless (nargs == nparams) $ throwError $ WrongNumberOfArgumentsGTException pos nparams nargs
+                    let okArg :: (TCType, TCType, Expr) -> Bool
+                        okArg (TCRef v1, v2, EIdent _ _) = dropQualifier v1 == v2
+                        okArg (v1, v2, _) = dropQualifier v1 == v2
+                    argTypes <- mapM tcheck args
+                    unless (all okArg (zip3 params argTypes args)) $
+                        throwError (WrongArgumentTypeGTException pos (show params) (show argTypes))
+                    pure ret
+                _ | otherwise -> throwError $ NotAFunctionGTException pos
     tcheck (EUOp pos (OpUnaryPlus _) e) = ensureType pos e TCInt
     tcheck (EUOp pos (OpUnaryMinus _) e) = ensureType pos e TCInt
     tcheck (EUOp pos (OpUnaryBang _) e) = ensureType pos e TCBool
@@ -118,4 +130,4 @@ instance Typechecker Expr where
     -- tcheck (EAssign pos (EIndex _ (EIdent _ x) idx) _ e) = throwError $ NotImplementedGTException pos
     tcheck (EAssign pos _ _ _) = throwError $ NotImplementedGTException Nothing
     tcheck (ELambda pos _ _ _) = throwError $ NotImplementedGTException pos
-    tcheck (EEmpty pos) = throwError $ NotImplementedGTException pos
+    tcheck (EEmpty _) = pure TCVoid

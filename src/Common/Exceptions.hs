@@ -21,6 +21,8 @@ data GTException' a where
     UndeclaredVariableGTException :: a -> Ident -> GTException' a
     UninitializedVariableGTException :: a -> Ident -> GTException' a
     AssignmentToReadOnlyVariable :: a -> Ident -> GTException' a
+    NotAFunctionGTException :: a -> GTException' a
+    WrongArgumentTypeGTException :: a -> String -> String -> GTException' a
 
 instance Show GTException where
     show (NotImplementedGTException pos) = "Not implemented at " ++ showpos pos
@@ -37,6 +39,8 @@ instance Show GTException where
     show (UndeclaredVariableGTException pos (Ident x)) = "Undeclared variable " ++ x ++ " at " ++ showpos pos
     show (UninitializedVariableGTException pos (Ident x)) = "Unititialized variable " ++ x ++ " at " ++ showpos pos
     show (AssignmentToReadOnlyVariable pos (Ident x)) = "Assignment of read-only variable " ++ x ++ " at " ++ showpos pos
+    show (NotAFunctionGTException pos) = "Not a function at " ++ showpos pos
+    show (WrongArgumentTypeGTException pos expected got) = "Wrong argument type at " ++ showpos pos ++ ", expected " ++ expected ++ ", got " ++ got
 
 showpos :: BNFC'Position -> String
 showpos (Just (l, c)) = "line " ++ show l ++ ", column " ++ show c
