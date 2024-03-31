@@ -94,7 +94,7 @@ instance Typechecker Expr where
     tcheck (EIdent pos x) = do
         ts <- get
         case tsGet x ts of
-            Just (t, TSInitialized) -> pure t
+            Just (t, TSInitialized) -> pure $ dropQualifier t
             Just (_, TSUninitialized) -> throwError $ UninitializedVariableGTException pos x
             Nothing -> throwError $ UndeclaredVariableGTException pos x
     tcheck (EIndex pos _ _) = throwError $ NotImplementedGTException pos
@@ -123,7 +123,7 @@ instance Typechecker Expr where
     tcheck (EOr pos e1 e2) = ensureType pos e1 TCBool >> ensureType pos e2 TCBool
     tcheck (EAssign pos1 (EIdent pos2 x) _ e) = do
         ts <- get
-        case tsGet x ts of
+        case tsGet x ts of -- NOTE: dont use tcheck, as it drops qualifiers
             Just (TCConst _, _) -> throwError $ AssignmentToReadOnlyVariable pos1 x
             Just (t, _) -> modify (tsPut x (t, TSInitialized)) >> ensureType pos1 e t
             Nothing -> throwError $ UndeclaredVariableGTException pos2 x
