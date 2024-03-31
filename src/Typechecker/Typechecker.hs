@@ -138,5 +138,8 @@ instance Typechecker Expr where
             Nothing -> throwError $ UndeclaredVariableGTException pos2 x
     -- tcheck (EAssign pos (EIndex _ (EIdent _ x) idx) _ e) = throwError $ NotImplementedGTException pos
     tcheck (EAssign pos _ _ _) = throwError $ NotImplementedGTException Nothing
-    tcheck (ELambda pos _ _ _) = throwError $ NotImplementedGTException pos
+    tcheck (ELambda pos params ret block) = do
+        let f = DFunc pos (Ident "") params ret block
+        void $ tcheck f
+        pure $ fromFunction params ret
     tcheck (EEmpty _) = pure TCVoid
