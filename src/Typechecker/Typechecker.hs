@@ -25,6 +25,10 @@ ensureType pos e t = do
     unless (et == t) $ throwError $ WrongTypeGTException pos (show t) (show et)
     pure t
 
+tcheckBuiltin :: BNFC'Position -> Expr -> [Expr] -> TypecheckM -> TypecheckM
+tcheckBuiltin pos (EIdent _ (Ident "print")) args _ = mapM_ tcheck args >> pure TCVoid
+tcheckBuiltin _ _ _ tm = tm
+
 instance Typechecker TranslationUnit where
     tcheck (Program pos decls) = do
         mapM_ tcheck decls >> get >>= \ts -> case tsGet (Ident "main") ts of
@@ -77,7 +81,7 @@ instance Typechecker Instr where
 instance Typechecker Expr where
     tcheck (ELitInt _ _) = pure TCInt
     tcheck (ELitChar _ _) = pure TCChar
-    tcheck (ELitString pos _) = throwError $ NotImplementedGTException pos
+    tcheck (ELitString _ _) = pure $ TCArray TCChar
     tcheck (ELitTrue _) = pure TCBool
     tcheck (ELitFalse _) = pure TCBool
     tcheck (EIdent pos x) = do
@@ -87,8 +91,11 @@ instance Typechecker Expr where
             Just (_, TSUninitialized) -> throwError $ UninitializedVariableGTException pos x
             Nothing -> throwError $ UndeclaredVariableGTException pos x
     tcheck (EIndex pos _ _) = throwError $ NotImplementedGTException pos
-    tcheck (EApply pos _ _) = throwError $ NotImplementedGTException pos
-    tcheck (EUOp pos _ _) = throwError $ NotImplementedGTException pos
+    tcheck (EApply pos e args) = tcheckBuiltin pos e args $ do
+        throwError $ NotImplementedGTException pos
+    tcheck (EUOp pos (OpUnaryPlus _) e) = ensureType pos e TCInt
+    tcheck (EUOp pos (OpUnaryMinus _) e) = ensureType pos e TCInt
+    tcheck (EUOp pos (OpUnaryBang _) e) = ensureType pos e TCBool
     tcheck (EMul pos e1 _ e2) = ensureType pos e1 TCInt >> ensureType pos e2 TCInt
     tcheck (EAdd pos e1 _ e2) = ensureType pos e1 TCInt >> ensureType pos e2 TCInt
     tcheck (ERel pos _ _ _) = throwError $ NotImplementedGTException pos
