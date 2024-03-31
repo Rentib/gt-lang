@@ -19,6 +19,12 @@ type TypecheckM' a = StateT TypecheckerState (Except GTException) a
 class Typechecker a where
     tcheck :: a -> TypecheckM
 
+ensureType :: BNFC'Position -> Expr -> TCType -> TypecheckM
+ensureType pos e t = do
+    et <- tcheck e
+    unless (et == t) $ throwError $ WrongTypeGTException pos (show t) (show et)
+    pure t
+
 instance Typechecker TranslationUnit where
     tcheck (Program pos decls) = do
         mapM_ tcheck decls >> get >>= \ts -> case tsGet (Ident "main") ts of
@@ -39,7 +45,7 @@ instance Typechecker Block where
 instance Typechecker Decl where
     tcheck (DNoInit _ x t) = modify (tsPut x (fromType t, TSUninitialized)) >> pure TCInt
     tcheck (DInit _ x e) = tcheck e >>= \et -> modify (tsPut x (et, TSInitialized)) >> pure TCInt
-    tcheck (DConst pos _ _) = throwError $ NotImplementedGTException pos
+    tcheck (DConst _ x e) = tcheck e >>= \et -> modify (tsPut x (TCConst et, TSInitialized)) >> pure TCInt
     tcheck (DFunc pos f args ret block) = do
         modify $ tsPut f (fromFunction args ret, TSInitialized)
         ts <- get
@@ -55,7 +61,7 @@ instance Typechecker Decl where
 
 instance Typechecker Instr where
     tcheck (IBlock _ block) = tcheck block
-    tcheck (IExpr pos _) = throwError $ NotImplementedGTException pos
+    tcheck (IExpr _ e) = tcheck e
     tcheck (IIf pos _ _) = throwError $ NotImplementedGTException pos
     tcheck (IIfElse pos _ _ _) = throwError $ NotImplementedGTException pos
     tcheck (IWhile pos _ _) = throwError $ NotImplementedGTException pos
@@ -74,16 +80,28 @@ instance Typechecker Expr where
     tcheck (ELitString pos _) = throwError $ NotImplementedGTException pos
     tcheck (ELitTrue _) = pure TCBool
     tcheck (ELitFalse _) = pure TCBool
-    tcheck (EIdent pos _) = throwError $ NotImplementedGTException pos
+    tcheck (EIdent pos x) = do
+        ts <- get
+        case tsGet x ts of
+            Just (t, TSInitialized) -> pure t
+            Just (_, TSUninitialized) -> throwError $ UninitializedVariableGTException pos x
+            Nothing -> throwError $ UndeclaredVariableGTException pos x
     tcheck (EIndex pos _ _) = throwError $ NotImplementedGTException pos
     tcheck (EApply pos _ _) = throwError $ NotImplementedGTException pos
     tcheck (EUOp pos _ _) = throwError $ NotImplementedGTException pos
-    tcheck (EMul pos _ _ _) = throwError $ NotImplementedGTException pos
-    tcheck (EAdd pos _ _ _) = throwError $ NotImplementedGTException pos
+    tcheck (EMul pos e1 _ e2) = ensureType pos e1 TCInt >> ensureType pos e2 TCInt
+    tcheck (EAdd pos e1 _ e2) = ensureType pos e1 TCInt >> ensureType pos e2 TCInt
     tcheck (ERel pos _ _ _) = throwError $ NotImplementedGTException pos
     tcheck (EEq pos _ _ _) = throwError $ NotImplementedGTException pos
-    tcheck (EAnd pos _ _) = throwError $ NotImplementedGTException pos
-    tcheck (EOr pos _ _) = throwError $ NotImplementedGTException pos
-    tcheck (EAssign pos _ _ _) = throwError $ NotImplementedGTException pos
+    tcheck (EAnd pos e1 e2) = ensureType pos e1 TCBool >> ensureType pos e2 TCBool
+    tcheck (EOr pos e1 e2) = ensureType pos e1 TCBool >> ensureType pos e2 TCBool
+    tcheck (EAssign pos1 (EIdent pos2 x) _ e) = do
+        ts <- get
+        case tsGet x ts of
+            Just (TCConst _, _) -> throwError $ AssignmentToReadOnlyVariable pos1 x
+            Just (t, _) -> modify (tsPut x (t, TSInitialized)) >> ensureType pos1 e t
+            Nothing -> throwError $ UndeclaredVariableGTException pos2 x
+    -- tcheck (EAssign pos (EIndex _ (EIdent _ x) idx) _ e) = throwError $ NotImplementedGTException pos
+    tcheck (EAssign pos _ _ _) = throwError $ NotImplementedGTException Nothing
     tcheck (ELambda pos _ _ _) = throwError $ NotImplementedGTException pos
     tcheck (EEmpty pos) = throwError $ NotImplementedGTException pos
