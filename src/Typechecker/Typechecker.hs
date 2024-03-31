@@ -26,8 +26,10 @@ ensureType pos e t = do
     pure t
 
 tcheckBuiltin :: BNFC'Position -> Expr -> [Expr] -> TypecheckM -> TypecheckM
-tcheckBuiltin pos (EIdent _ (Ident "print")) args _ = mapM_ tcheck args >> pure TCVoid
-tcheckBuiltin pos (EIdent _ (Ident "malloc")) [n] _ = throwError $ NotImplementedGTException pos
+tcheckBuiltin _ (EIdent _ (Ident "print")) args _ = mapM_ tcheck args >> pure TCVoid
+tcheckBuiltin pos (EIdent _ (Ident "malloc")) [n] _ = do
+    void $ ensureType pos n TCInt
+    pure $ TCArray TCGeneric
 tcheckBuiltin pos (EIdent _ (Ident "malloc")) args _ =
     throwError $ WrongNumberOfArgumentsGTException pos 1 (length args)
 tcheckBuiltin _ _ _ tm = tm
@@ -105,7 +107,10 @@ instance Typechecker Expr where
             Just (t, TSInitialized) -> pure $ dropQualifier t
             Just (_, TSUninitialized) -> throwError $ UninitializedVariableGTException pos x
             Nothing -> throwError $ UndeclaredVariableGTException pos x
-    tcheck (EIndex pos _ _) = throwError $ NotImplementedGTException pos
+    tcheck (EIndex pos e1 e2) = do
+        tcheck e2 >> tcheck e1 >>= \case
+            TCArray t -> ensureType pos e2 TCInt >> pure t
+            _ | otherwise -> throwError $ NotAnArrayGTException pos
     tcheck (EApply pos f args) =
         tcheckBuiltin pos f args $
             tcheck f >>= \case
@@ -135,8 +140,16 @@ instance Typechecker Expr where
             Just (TCConst _, _) -> throwError $ AssignmentToReadOnlyVariable pos1 x
             Just (t, _) -> modify (tsPut x (t, TSInitialized)) >> ensureType pos1 e t
             Nothing -> throwError $ UndeclaredVariableGTException pos2 x
-    -- tcheck (EAssign pos (EIndex _ (EIdent _ x) idx) _ e) = throwError $ NotImplementedGTException pos
-    tcheck (EAssign pos _ _ _) = throwError $ NotImplementedGTException Nothing
+    tcheck (EAssign pos (EIndex _ (EIdent _ x) idx) _ e) = do
+        ts <- get
+        case tsGet x ts of
+            Just (TCArray t, _) -> do
+                void $ ensureType pos idx TCInt
+                modify (tsPut x (TCArray t, TSInitialized))
+                ensureType pos e t
+            Just _ -> throwError $ NotAnArrayGTException pos
+            Nothing -> throwError $ UndeclaredVariableGTException pos x
+    tcheck (EAssign pos _ _ _) = throwError $ NotImplementedGTException pos
     tcheck (ELambda pos params ret block) = do
         let f = DFunc pos (Ident "") params ret block
         void $ tcheck f

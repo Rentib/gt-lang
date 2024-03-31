@@ -25,6 +25,7 @@ data GTException' a where
     WrongArgumentTypeGTException :: a -> String -> String -> GTException' a
     BreakOutsideLoopGTException :: a -> GTException' a
     ContinueOutsideLoopGTException :: a -> GTException' a
+    NotAnArrayGTException :: a -> GTException' a
 
 instance Show GTException where
     show (NotImplementedGTException pos) = "Not implemented at " ++ showpos pos
@@ -45,6 +46,7 @@ instance Show GTException where
     show (WrongArgumentTypeGTException pos expected got) = "Wrong argument type at " ++ showpos pos ++ ", expected " ++ expected ++ ", got " ++ got
     show (BreakOutsideLoopGTException pos) = "Break outside loop at " ++ showpos pos
     show (ContinueOutsideLoopGTException pos) = "Continue outside loop at " ++ showpos pos
+    show (NotAnArrayGTException pos) = "Not an array at " ++ showpos pos
 
 showpos :: BNFC'Position -> String
 showpos (Just (l, c)) = "line " ++ show l ++ ", column " ++ show c
