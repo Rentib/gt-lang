@@ -12,7 +12,7 @@ import Evaluator.Datatypes
 import Parser.Abs
 
 evaluate :: TranslationUnit -> IO (Either GTException Value)
-evaluate prog = evalStateT (runExceptT (eval prog)) esEmpty
+evaluate tu = evalStateT (runExceptT (eval tu)) esEmpty
 
 type EvalM = EvalM' Value
 type EvalM' a = ExceptT GTException (StateT EvaluatorState IO) a
