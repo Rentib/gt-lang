@@ -13,7 +13,7 @@ data Value where
     VBool :: Bool -> Value
     VChar :: Char -> Value
     VVoid :: Value
-    VFunc :: [Arg] -> Block -> Env -> Value
+    VFunc :: Ident -> [Arg] -> Block -> Env -> Value
     VArray :: Array Integer Value -> Value
     VUninitialized :: Value
 

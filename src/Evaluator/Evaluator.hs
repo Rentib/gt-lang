@@ -35,9 +35,9 @@ instance Evaluator Decl where
     eval (DNoInit _ x _) = modify (esNew x VUninitialized) >> pure VVoid
     eval (DInit _ x e) = eval e >>= \v -> modify (esNew x v) >> pure VVoid
     eval (DConst _ x e) = eval e >>= \v -> modify (esNew x v) >> pure VVoid
-    eval (DFunc _ f args _ block) = do
+    eval (DFunc _ fname args _ block) = do
         es <- get
-        modify $ esNew f (VFunc args block (env es))
+        modify $ esNew fname (VFunc fname args block (env es))
         pure VVoid
 
 evalIfNoFlag :: EvalM -> EvalM
@@ -102,7 +102,7 @@ instance Evaluator Expr where
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (EApply pos e args) = evalBuiltin e args $ do
         f <- eval e
-        (VFunc params block fenv) <- case f of
+        (VFunc fname params block fenv) <- case f of
             VFunc{} -> pure f
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
         when (length params /= length args) $ throwError $ UnknownRuntimeGTException pos
@@ -124,9 +124,10 @@ instance Evaluator Expr where
         mapM_ esPutArg $ zip3 params arg_values arg_locs
 
         -- recursion, FIXME: doesnt work after function assignment
-        void $ case e of
-            EIdent _ (Ident fname) -> modify (esNew (Ident fname) f)
-            _ | otherwise -> pure ()
+        modify $ esNew fname f
+        -- void $ case e of
+        --     EIdent _ (Ident fname) -> modify (esNew (Ident fname) f)
+        --     _ | otherwise -> pure ()
 
         void $ eval block
         res <- gets esGetFlag
@@ -193,5 +194,5 @@ instance Evaluator Expr where
                 modify (esUpdate x (VArray (a // [(i', v)]))) >> pure v
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (EAssign pos _ _ _) = throwError $ UnknownRuntimeGTException pos
-    eval (ELambda _ args _ block) = gets (VFunc args block . env)
+    eval (ELambda _ args _ block) = gets (VFunc (Ident "") args block . env)
     eval (EEmpty _) = pure VVoid
