@@ -16,6 +16,8 @@ data GTException' a where
     MissingMainGTException :: a -> GTException' a
     WrongTypeGTException :: a -> String -> String -> GTException' a
     WrongNumberOfArgumentsGTException :: a -> Int -> Int -> GTException' a
+    FunctionWithoutReturnGTException :: a -> String -> GTException' a
+    WrongReturnTypeGTException :: a -> String -> String -> GTException' a
 
 instance Show GTException where
     show (NotImplementedGTException pos) = "Not implemented at " ++ showpos pos
@@ -27,6 +29,8 @@ instance Show GTException where
     show (MissingMainGTException _) = "Missing main function"
     show (WrongTypeGTException pos expected got) = "Wrong type at " ++ showpos pos ++ ", expected " ++ expected ++ ", got " ++ got
     show (WrongNumberOfArgumentsGTException pos expected got) = "Wrong number of arguments at " ++ showpos pos ++ ", expected " ++ show expected ++ ", got " ++ show got
+    show (FunctionWithoutReturnGTException pos fname) = "Non-void function " ++ fname ++ " does not return at " ++ showpos pos
+    show (WrongReturnTypeGTException pos expected got) = "Wrong return type at " ++ showpos pos ++ ", expected " ++ expected ++ ", got " ++ got
 
 showpos :: BNFC'Position -> String
 showpos (Just (l, c)) = "line " ++ show l ++ ", column " ++ show c

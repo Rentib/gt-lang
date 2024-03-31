@@ -28,7 +28,13 @@ instance Typechecker TranslationUnit where
             _ | otherwise -> throwError $ MissingMainGTException pos
 
 instance Typechecker Block where
-    tcheck (PBlock pos _ _) = throwError $ NotImplementedGTException pos
+    tcheck (PBlock _ decls instrs) = do
+        ts <- get
+        mapM_ tcheck decls
+        mapM_ tcheck instrs
+        ts' <- get
+        put $ ts'{_env = _env ts}
+        pure TCInt
 
 instance Typechecker Decl where
     tcheck (DNoInit pos _ _) = throwError $ NotImplementedGTException pos
@@ -36,10 +42,19 @@ instance Typechecker Decl where
     tcheck (DConst pos _ _) = throwError $ NotImplementedGTException pos
     tcheck (DFunc pos f args ret block) = do
         modify $ tsPut f (fromFunction args ret, TSInitialized)
+        ts <- get
+        put $ ts{_retType = fromType ret, _hasReturn = False, _inLoop = False}
+        let addArg (PArgVal _ x t) = tsPut x (fromType t, TSInitialized)
+            addArg (PArgRef _ x t) = tsPut x (fromType t, TSInitialized)
+        mapM_ (modify . addArg) args
+        void $ tcheck block
+        ts' <- get
+        unless (_hasReturn ts' || fromType ret == TCVoid) $ throwError $ FunctionWithoutReturnGTException pos (show f)
+        put ts
         pure TCInt
 
 instance Typechecker Instr where
-    tcheck (IBlock pos _) = throwError $ NotImplementedGTException pos
+    tcheck (IBlock _ block) = tcheck block
     tcheck (IExpr pos _) = throwError $ NotImplementedGTException pos
     tcheck (IIf pos _ _) = throwError $ NotImplementedGTException pos
     tcheck (IIfElse pos _ _ _) = throwError $ NotImplementedGTException pos
@@ -47,14 +62,18 @@ instance Typechecker Instr where
     tcheck (IFor pos _ _ _ _) = throwError $ NotImplementedGTException pos
     tcheck (IContinue pos) = throwError $ NotImplementedGTException pos
     tcheck (IBreak pos) = throwError $ NotImplementedGTException pos
-    tcheck (IReturn pos _) = throwError $ NotImplementedGTException pos
+    tcheck (IReturn pos e) = do
+        ts <- get
+        t <- tcheck e
+        unless (t == _retType ts) $ throwError $ WrongReturnTypeGTException pos (show $ _retType ts) (show t)
+        put (ts{_hasReturn = True}) >> pure TCInt
 
 instance Typechecker Expr where
-    tcheck (ELitInt pos _) = throwError $ NotImplementedGTException pos
-    tcheck (ELitChar pos _) = throwError $ NotImplementedGTException pos
+    tcheck (ELitInt _ _) = pure TCInt
+    tcheck (ELitChar _ _) = pure TCChar
     tcheck (ELitString pos _) = throwError $ NotImplementedGTException pos
-    tcheck (ELitTrue pos) = throwError $ NotImplementedGTException pos
-    tcheck (ELitFalse pos) = throwError $ NotImplementedGTException pos
+    tcheck (ELitTrue _) = pure TCBool
+    tcheck (ELitFalse _) = pure TCBool
     tcheck (EIdent pos _) = throwError $ NotImplementedGTException pos
     tcheck (EIndex pos _ _) = throwError $ NotImplementedGTException pos
     tcheck (EApply pos _ _) = throwError $ NotImplementedGTException pos
