@@ -27,6 +27,9 @@ ensureType pos e t = do
 
 tcheckBuiltin :: BNFC'Position -> Expr -> [Expr] -> TypecheckM -> TypecheckM
 tcheckBuiltin pos (EIdent _ (Ident "print")) args _ = mapM_ tcheck args >> pure TCVoid
+tcheckBuiltin pos (EIdent _ (Ident "malloc")) [n] _ = throwError $ NotImplementedGTException pos
+tcheckBuiltin pos (EIdent _ (Ident "malloc")) args _ =
+    throwError $ WrongNumberOfArgumentsGTException pos 1 (length args)
 tcheckBuiltin _ _ _ tm = tm
 
 instance Typechecker TranslationUnit where
