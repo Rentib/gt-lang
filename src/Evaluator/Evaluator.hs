@@ -79,6 +79,12 @@ evalBuiltin (EIdent pos (Ident "malloc")) [e] _ = do
         _ | otherwise -> throwError $ UnknownRuntimeGTException pos
 evalBuiltin _ _ em = em
 
+checkBounds :: BNFC'Position -> Array Integer a -> Integer -> EvalM
+checkBounds pos a i =
+    if i < 0 || i > fromIntegral (snd (bounds a))
+        then throwError $ IndexOutOfBoundsGTException pos i
+        else pure VVoid
+
 instance Evaluator Expr where
     eval (ELitInt _ n) = pure $ VInt n
     eval (ELitChar _ c) = pure $ VChar c
@@ -91,7 +97,7 @@ instance Evaluator Expr where
         v1 <- eval e1
         v2 <- eval e2
         case (v1, v2) of
-            (VArray a, VInt i) -> pure $ a ! i
+            (VArray a, VInt i) -> checkBounds pos a i >> pure (a ! i)
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (EApply pos e args) = evalBuiltin e args $ do
         f <- eval e
@@ -116,7 +122,7 @@ instance Evaluator Expr where
         put $ es{env = fenv}
         mapM_ esPutArg $ zip3 params arg_values arg_locs
 
-        -- recursion
+        -- recursion, FIXME: doesnt work after function assignment
         void $ case e of
             EIdent _ (Ident fname) -> modify (esNew (Ident fname) f)
             _ | otherwise -> pure ()
@@ -180,19 +186,16 @@ instance Evaluator Expr where
             OpNeq _ -> v1 /= v2
     eval (EAnd _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then eval e2 else pure v1
     eval (EOr _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then pure v1 else eval e2
-    eval (EAssign _ (EIdent _ x) _ e) = do
-        v <- eval e
-        modify $ esUpdate x v
-        pure v
+    eval (EAssign _ (EIdent _ x) _ e) = eval e >>= \v -> modify (esUpdate x v) >> pure v
     eval (EAssign pos (EIndex _ (EIdent _ x) idx) _ e) = do
+        -- FIXME: for now only one-dimensional arrays are supported
         arr <- gets $ esGet x
         i <- eval idx
         v <- eval e
         case (arr, i) of
             (VArray a, VInt i') -> do
-                let a' = a // [(i', v)]
-                modify $ esUpdate x (VArray a')
-                pure v
+                void $ checkBounds pos a i'
+                modify (esUpdate x (VArray (a // [(i', v)]))) >> pure v
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (EAssign pos _ _ _) = throwError $ UnknownRuntimeGTException pos
     eval (ELambda _ args _ block) = gets (VFunc args block . env)

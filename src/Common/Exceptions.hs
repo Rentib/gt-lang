@@ -11,12 +11,14 @@ data GTException' a where
     UnknownRuntimeGTException :: a -> GTException' a
     DivideByZeroGTException :: a -> GTException' a
     MallocFailedGTException :: a -> GTException' a
+    IndexOutOfBoundsGTException :: a -> Integer -> GTException' a
 
 instance Show GTException where
     show (NotImplementedGTException pos) = "Not implemented at " ++ showpos pos
     show (UnknownRuntimeGTException pos) = "Unknown runtime exception at " ++ showpos pos
     show (DivideByZeroGTException pos) = "Division by zero at " ++ showpos pos
     show (MallocFailedGTException pos) = "Malloc failed at " ++ showpos pos
+    show (IndexOutOfBoundsGTException pos idx) = "Index out of bounds at " ++ showpos pos ++ " (index: " ++ show idx ++ ")"
 
 showpos :: BNFC'Position -> String
 showpos (Just (l, c)) = "line " ++ show l ++ ", column " ++ show c
