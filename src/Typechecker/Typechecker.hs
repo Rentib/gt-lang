@@ -74,12 +74,11 @@ instance Typechecker Instr where
     tcheck (IWhile pos e i) = do
         ts <- get
         let inLoop = _inLoop ts
-        void $ ensureType pos e TCBool
         put $ ts{_inLoop = True}
-        void $ tcheck i
+        void $ ensureType pos e TCBool >> tcheck i
         put $ ts{_inLoop = inLoop}
         pure TCVoid
-    tcheck (IFor pos _ _ _ _) = throwError $ NotImplementedGTException pos
+    tcheck (IFor pos e1 e2 e3 i) = tcheck e1 >> tcheck (IWhile pos e2 i) >> tcheck e3
     tcheck (IContinue pos) = do
         inLoop <- gets _inLoop
         unless inLoop $ throwError $ ContinueOutsideLoopGTException pos
