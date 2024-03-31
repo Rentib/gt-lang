@@ -66,9 +66,16 @@ instance Typechecker Decl where
 instance Typechecker Instr where
     tcheck (IBlock _ block) = tcheck block
     tcheck (IExpr _ e) = tcheck e
-    tcheck (IIf pos _ _) = throwError $ NotImplementedGTException pos
-    tcheck (IIfElse pos _ _ _) = throwError $ NotImplementedGTException pos
-    tcheck (IWhile pos _ _) = throwError $ NotImplementedGTException pos
+    tcheck (IIf pos e i) = ensureType pos e TCBool >> tcheck i
+    tcheck (IIfElse pos e i1 i2) = ensureType pos e TCBool >> tcheck i1 >> tcheck i2
+    tcheck (IWhile pos e i) = do
+        ts <- get
+        let inLoop = _inLoop ts
+        void $ ensureType pos e TCBool
+        put $ ts{_inLoop = True}
+        void $ tcheck i
+        put $ ts{_inLoop = inLoop}
+        pure TCVoid
     tcheck (IFor pos _ _ _ _) = throwError $ NotImplementedGTException pos
     tcheck (IContinue pos) = throwError $ NotImplementedGTException pos
     tcheck (IBreak pos) = throwError $ NotImplementedGTException pos
@@ -98,8 +105,8 @@ instance Typechecker Expr where
     tcheck (EUOp pos (OpUnaryBang _) e) = ensureType pos e TCBool
     tcheck (EMul pos e1 _ e2) = ensureType pos e1 TCInt >> ensureType pos e2 TCInt
     tcheck (EAdd pos e1 _ e2) = ensureType pos e1 TCInt >> ensureType pos e2 TCInt
-    tcheck (ERel pos _ _ _) = throwError $ NotImplementedGTException pos
-    tcheck (EEq pos _ _ _) = throwError $ NotImplementedGTException pos
+    tcheck (ERel pos e1 _ e2) = ensureType pos e1 TCInt >> ensureType pos e2 TCInt >> pure TCBool
+    tcheck (EEq pos e1 _ e2) = tcheck e1 >>= ensureType pos e2 >> pure TCBool
     tcheck (EAnd pos e1 e2) = ensureType pos e1 TCBool >> ensureType pos e2 TCBool
     tcheck (EOr pos e1 e2) = ensureType pos e1 TCBool >> ensureType pos e2 TCBool
     tcheck (EAssign pos1 (EIdent pos2 x) _ e) = do
