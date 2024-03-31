@@ -137,18 +137,18 @@ instance Evaluator Expr where
             ESFReturn v -> pure v
             ESFNone -> pure VVoid
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
-    eval (EUOp pos op e) = do
-        v <- eval e
-        case op of
-            OpUnaryPlus _ -> case v of
-                VInt n -> pure $ VInt n
-                _ | otherwise -> throwError $ UnknownRuntimeGTException pos
-            OpUnaryMinus _ -> case v of
-                VInt n -> pure $ VInt (-n)
-                _ | otherwise -> throwError $ UnknownRuntimeGTException pos
-            OpUnaryBang _ -> case v of
-                VBool b -> pure $ VBool $ not b
-                _ | otherwise -> throwError $ UnknownRuntimeGTException pos
+    eval (EUOp pos (OpUnaryPlus _) e) =
+        eval e >>= \case
+            VInt n -> pure $ VInt n
+            _ | otherwise -> throwError $ UnknownRuntimeGTException pos
+    eval (EUOp pos (OpUnaryMinus _) e) =
+        eval e >>= \case
+            VInt n -> pure $ VInt $ -n
+            _ | otherwise -> throwError $ UnknownRuntimeGTException pos
+    eval (EUOp pos (OpUnaryBang _) e) =
+        eval e >>= \case
+            VBool b -> pure $ VBool $ not b
+            _ | otherwise -> throwError $ UnknownRuntimeGTException pos
     eval (EMul pos e1 op e2) = do
         v1 <- eval e1
         v2 <- eval e2
