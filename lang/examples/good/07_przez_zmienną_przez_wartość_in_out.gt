@@ -1,0 +1,17 @@
+fn fp(x : int, &y : int) -> int {
+    var t : int;
+    if (y == 0)
+        return 1;
+    y = y / 2;
+    t = fp(x, y);
+    if (y % 2 == 0)
+        return t * t;
+    return t * t * x;
+}
+
+fn main() -> int {
+    var y = 10;
+    print(fp(2, y), ' ', y, '\n');
+
+    return 0;
+}

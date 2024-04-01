@@ -1,0 +1,15 @@
+fn fp(x : int, y : int) -> int {
+    var t : int;
+    if (y == 0)
+        return 1;
+    t = fp(x, y / 2);
+    if (y % 2 == 0)
+        return t * t;
+    return t * t * x;
+}
+
+fn main() -> int {
+    print(fp(2, 10), '\n');
+
+    return 0;
+}

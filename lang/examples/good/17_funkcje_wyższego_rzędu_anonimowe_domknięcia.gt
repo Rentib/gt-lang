@@ -1,0 +1,22 @@
+fn rec(x : int) -> void {
+    if (x == 0)
+        return;
+    return rec(x - 1);
+}
+
+fn main() -> int {
+    var a = \(x : int) -> int => { return x + 1; };
+    var b = \(&x : int, f : (int) -> int) -> int => { x = f(x); return x; };
+    var c = 1;
+    var d = \() -> (int) -> int => { return a; };
+    var e = rec;
+
+    print(a(5), "\n");
+    print((\(x: int) -> int => { return x + 1; })(a(1)), "\n");
+    print(b(c, a), " ", c, "\n");
+    print((d())(1), "\n");
+    // recursion works fine even efter function assignment
+    e(10);
+
+    return 0;
+}

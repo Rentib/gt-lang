@@ -1,0 +1,12 @@
+fn main() -> int {
+    const n = 10;
+
+    {
+        var n = "hmm";
+        print(n, ' ');
+        n = "...";
+    }
+    print(n, '\n');
+
+    return 0;
+}

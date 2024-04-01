@@ -1,0 +1,11 @@
+fn main() -> int {
+    const n = 10;
+    var i : int;
+    var s = 0;
+
+    for (i = 1; i <= n; i = i + 1)
+        s = s + i;
+    print(s, '\n');
+
+    return 0;
+}

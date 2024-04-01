@@ -1,0 +1,9 @@
+fn main() -> int {
+    var a : int;
+    var b : bool;
+    var c : char;
+    var d : [char];
+    var e : void;
+
+    return 0;
+}

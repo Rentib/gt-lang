@@ -1,0 +1,21 @@
+fn main() -> int {
+    const n = 10;
+    var i = 0;
+
+    while (true) {
+        print(i, ' ');
+        if (i < 10) {
+            i = i + 1;
+            continue;
+        }
+        print(i == 10, '\n');
+        break;
+    }
+
+    for (i = 0; i < n; i = i + 1)
+        continue;
+    for (i = 0; i < n; i = i + 1)
+        break;
+
+    return 0;
+}

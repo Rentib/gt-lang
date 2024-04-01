@@ -1,0 +1,8 @@
+fn f() -> [char] {
+    return "Hello, World\n";
+}
+
+fn main() -> int {
+    print(f());
+    return 0;
+}

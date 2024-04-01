@@ -1,0 +1,41 @@
+fn main() -> int {
+    var a = 1;
+    var b = true;
+    var c = 'c';
+    var d = "Hello, World!\n";
+
+    // Unary Expressions
+    +1;
+    -1;
+    !true;
+
+    // Multiplication
+    4 * 2;
+    4 / 2;
+    4 % 2;
+
+    // Addition
+    2 + 2;
+    2 - 2;
+
+    // Relation
+    2 < 3;
+    3 <= 2;
+    4 > 1;
+    -1 >= 4;
+
+    // Equality
+    a == 7;
+    a != 7;
+    b == true;
+    b != true;
+    c == 'c';
+    c != 'd';
+    d == "Hello, there!\n";
+    d != "Hello, World!\n";
+
+    // Combined
+    a = 1 + 4 * 7 / 5 % 3 - 1 * -1;
+
+    return 0;
+}

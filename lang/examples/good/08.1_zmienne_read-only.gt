@@ -1,0 +1,21 @@
+fn discard(&y : int) -> void {
+    y = 42;
+}
+
+fn main() -> int {
+    const x = 1;
+    var y : const int;
+    var z = 0;
+
+    // x = z; // Assignment of read-only value
+    // y = z; // Assignment of read-only value
+    z = x;
+
+    // Discarding const qualifier
+    discard(x);
+    // illegal because y is uninitialized, even though its passed by reference
+    // discard(y);
+    print(x, ' ', z, '\n');
+
+    return 0;
+}

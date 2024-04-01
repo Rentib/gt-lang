@@ -1,0 +1,19 @@
+fn f() -> int {
+    return 0;
+}
+
+fn main() -> int {
+    fn f() -> [char] {
+        fn f() -> bool {
+            return true;
+        }
+        var x = f();
+        if (x) return "nice\n";
+        return "not nice\n";
+    }
+    var magic = print(f());
+
+    magic; // evaluating magic calls print(f());
+
+    return 0;
+}

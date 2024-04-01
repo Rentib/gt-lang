@@ -1,0 +1,13 @@
+fn main() -> int {
+    var a = 42;
+    var b : bool;
+    var c : char;
+    var d = "huh?";
+
+    a = 1;
+    b = true;
+    c = 'c';
+    d = "eh?";
+
+    return 0;
+}
