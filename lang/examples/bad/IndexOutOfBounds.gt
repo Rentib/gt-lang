@@ -1,0 +1,5 @@
+fn main() -> int {
+    var x : [int];
+    x = malloc(5);
+    return x[5];
+}

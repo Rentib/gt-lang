@@ -1,0 +1,7 @@
+fn main() -> int {
+    while (false) {
+        print("nope\n");
+    }
+    break;
+    return 0;
+}

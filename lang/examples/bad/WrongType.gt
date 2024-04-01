@@ -1,0 +1,7 @@
+fn main() -> int {
+    var x = 1;
+    var y = true;
+    if (x == y)
+        print("hmm\n");
+    return 0;
+}
