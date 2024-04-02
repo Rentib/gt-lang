@@ -1,3 +1,22 @@
 fn main() -> int {
+    const n = 1000;
+    var primes = ([int])malloc(n);
+    var primes_cnt = 0;
+    var sieve = ([bool])malloc(n);
+    var i : int;
+    var j : int;
+
+    for (i = 2; i < n; i = i + 1) {
+        if (sieve[i])
+            continue;
+        primes[primes_cnt] = i;
+        primes_cnt = primes_cnt + 1;
+        for (j = i * i; j < n; j = j + i)
+            sieve[j] = true;
+    }
+
+    for (i = 0; i < primes_cnt; i = i + 1)
+        print(primes[i], ' ');
+
     return 0;
 }
