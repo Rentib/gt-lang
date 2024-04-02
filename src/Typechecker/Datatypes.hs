@@ -16,20 +16,7 @@ data TCType where
     TCArray :: TCType -> TCType
     TCConst :: TCType -> TCType
     TCRef :: TCType -> TCType
-    TCGeneric :: TCType
-
-instance Eq TCType where
-    TCInt == TCInt = True
-    TCBool == TCBool = True
-    TCChar == TCChar = True
-    TCVoid == TCVoid = True
-    TCFunc args1 ret1 == TCFunc args2 ret2 = args1 == args2 && ret1 == ret2
-    TCArray t1 == TCArray t2 = t1 == t2
-    TCConst t1 == TCConst t2 = t1 == t2
-    TCRef t1 == TCRef t2 = t1 == t2
-    TCGeneric == _ = True
-    _ == TCGeneric = True
-    _ == _ = False
+    deriving (Eq)
 
 instance Show TCType where
     show TCInt = "int"
@@ -40,7 +27,6 @@ instance Show TCType where
     show (TCArray t) = show t ++ "[]"
     show (TCConst t) = "const " ++ show t
     show (TCRef t) = show t ++ "&"
-    show TCGeneric = "generic"
 
 fromType :: Type -> TCType
 fromType (TInt _) = TCInt
@@ -62,6 +48,20 @@ dropQualifier :: TCType -> TCType
 dropQualifier (TCRef t) = TCRef $ dropQualifier t
 dropQualifier (TCConst t) = t
 dropQualifier t = t
+
+isCastable :: TCType -> TCType -> Bool
+isCastable t1 t2 = isCastable' (dropQualifier t1) (dropQualifier t2)
+
+isCastable' :: TCType -> TCType -> Bool
+isCastable' (TCArray t1) (TCArray t2) = isCastable' t1 t2
+isCastable' (TCArray _) _ = False
+isCastable' _ (TCArray _) = False
+isCastable' (TCRef t1) (TCRef t2) = isCastable' t1 t2
+isCastable' (TCRef _) _ = False
+isCastable' _ (TCRef _) = False
+isCastable' (TCFunc _ _) _ = False
+isCastable' _ (TCFunc _ _) = False
+isCastable' _ _ = True
 
 data TCState where
     TSInitialized :: TCState

@@ -72,6 +72,7 @@ data Expr' a
     | EIdent a Ident
     | EIndex a (Expr' a) (Expr' a)
     | EApply a (Expr' a) [Expr' a]
+    | ECast a (Type' a) (Expr' a)
     | EUOp a (UnaryOp' a) (Expr' a)
     | EMul a (Expr' a) (MulOp' a) (Expr' a)
     | EAdd a (Expr' a) (AddOp' a) (Expr' a)
@@ -178,6 +179,7 @@ instance HasPosition Expr where
     EIdent p _ -> p
     EIndex p _ _ -> p
     EApply p _ _ -> p
+    ECast p _ _ -> p
     EUOp p _ _ -> p
     EMul p _ _ _ -> p
     EAdd p _ _ _ -> p

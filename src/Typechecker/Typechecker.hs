@@ -29,7 +29,7 @@ tcheckBuiltin :: BNFC'Position -> Expr -> [Expr] -> TypecheckM -> TypecheckM
 tcheckBuiltin _ (EIdent _ (Ident "print")) args _ = mapM_ tcheck args >> pure TCVoid
 tcheckBuiltin pos (EIdent _ (Ident "malloc")) [n] _ = do
     void $ ensureType pos n TCInt
-    pure $ TCArray TCGeneric
+    pure $ TCArray TCVoid
 tcheckBuiltin pos (EIdent _ (Ident "malloc")) args _ =
     throwError $ WrongNumberOfArgumentsGTException pos 1 (length args)
 tcheckBuiltin _ _ _ tm = tm
@@ -125,6 +125,11 @@ instance Typechecker Expr where
                         throwError (WrongArgumentTypeGTException pos (show params) (show argTypes))
                     pure ret
                 _ | otherwise -> throwError $ NotAFunctionGTException pos
+    tcheck (ECast pos t e) = do
+        et <- tcheck e
+        let tt = fromType t
+        unless (isCastable et tt) $ throwError $ InvalidCastGTException pos (show et) (show tt)
+        pure tt
     tcheck (EUOp pos (OpUnaryPlus _) e) = ensureType pos e TCInt
     tcheck (EUOp pos (OpUnaryMinus _) e) = ensureType pos e TCInt
     tcheck (EUOp pos (OpUnaryBang _) e) = ensureType pos e TCBool

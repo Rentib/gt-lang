@@ -43,6 +43,7 @@ ELitFalse.      Expr9 ::= "false" ;
 EIdent.         Expr9 ::= Ident ;
 EIndex.         Expr9 ::= Expr9 "[" Expr "]" ;
 EApply.         Expr9 ::= Expr9 "(" [Expr] ")" ;
+ECast.          Expr8 ::= "(" Type ")" Expr9 ;
 EUOp.           Expr8 ::= UnaryOp Expr9 ;
 EMul.           Expr7 ::= Expr7 MulOp Expr8 ;
 EAdd.           Expr6 ::= Expr6 AddOp Expr7 ;

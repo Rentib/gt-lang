@@ -88,6 +88,27 @@ checkBounds pos a i =
         then throwError $ IndexOutOfBoundsGTException pos i
         else pure VVoid
 
+evalCast :: Value -> Type -> Value
+evalCast VUninitialized _ = VUninitialized
+evalCast (VInt n) (TInt _) = VInt n
+evalCast (VInt n) (TBool _) = VBool $ n /= 0
+evalCast (VInt n) (TChar _) = VChar $ toEnum $ fromIntegral n
+evalCast (VInt _) (TVoid _) = VVoid
+evalCast (VBool b) (TInt _) = VInt $ if b then 1 else 0
+evalCast (VBool b) (TBool _) = VBool b
+evalCast (VBool b) (TChar _) = VChar $ if b then '1' else '0'
+evalCast (VBool _) (TVoid _) = VVoid
+evalCast (VChar c) (TInt _) = VInt $ fromIntegral $ fromEnum c
+evalCast (VChar c) (TBool _) = VBool $ c /= '\0'
+evalCast (VChar c) (TChar _) = VChar c
+evalCast (VChar _) (TVoid _) = VVoid
+evalCast VVoid (TInt _) = VInt 0
+evalCast VVoid (TBool _) = VBool False
+evalCast VVoid (TChar _) = VChar '\0'
+evalCast VVoid (TVoid _) = VVoid
+evalCast (VArray arr) (TArray _ t) = VArray $ array (bounds arr) [(i, evalCast v t) | (i, v) <- assocs arr]
+evalCast _ _ = undefined
+
 instance Evaluator Expr where
     eval (ELitInt _ n) = pure $ VInt n
     eval (ELitChar _ c) = pure $ VChar c
@@ -139,6 +160,7 @@ instance Evaluator Expr where
             ESFReturn v -> pure v
             ESFNone -> pure VVoid
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
+    eval (ECast _ t e) = eval e >>= \v -> pure $ evalCast v t
     eval (EUOp pos (OpUnaryPlus _) e) =
         eval e >>= \case
             VInt n -> pure $ VInt n

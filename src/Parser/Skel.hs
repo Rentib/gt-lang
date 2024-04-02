@@ -71,6 +71,7 @@ transExpr x = case x of
   Parser.Abs.EIdent _ ident -> failure x
   Parser.Abs.EIndex _ expr1 expr2 -> failure x
   Parser.Abs.EApply _ expr exprs -> failure x
+  Parser.Abs.ECast _ type_ expr -> failure x
   Parser.Abs.EUOp _ unaryop expr -> failure x
   Parser.Abs.EMul _ expr1 mulop expr2 -> failure x
   Parser.Abs.EAdd _ expr1 addop expr2 -> failure x

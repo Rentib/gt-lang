@@ -26,6 +26,7 @@ data GTException' a where
     BreakOutsideLoopGTException :: a -> GTException' a
     ContinueOutsideLoopGTException :: a -> GTException' a
     NotAnArrayGTException :: a -> GTException' a
+    InvalidCastGTException :: a -> String -> String -> GTException' a
 
 instance Show GTException where
     show (NotImplementedGTException pos) = "Not implemented at " ++ showpos pos
@@ -47,6 +48,7 @@ instance Show GTException where
     show (BreakOutsideLoopGTException pos) = "Break outside loop at " ++ showpos pos
     show (ContinueOutsideLoopGTException pos) = "Continue outside loop at " ++ showpos pos
     show (NotAnArrayGTException pos) = "Not an array at " ++ showpos pos
+    show (InvalidCastGTException pos type1 type2) = "Invalid cast at " ++ showpos pos ++ ", cannot cast " ++ type1 ++ " to " ++ type2
 
 showpos :: BNFC'Position -> String
 showpos (Just (l, c)) = "line " ++ show l ++ ", column " ++ show c
