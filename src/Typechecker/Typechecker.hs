@@ -140,6 +140,8 @@ instance Typechecker Expr where
     tcheck (EUOp pos (OpUnaryPlus _) e) = ensureType pos e TCInt
     tcheck (EUOp pos (OpUnaryMinus _) e) = ensureType pos e TCInt
     tcheck (EUOp pos (OpUnaryBang _) e) = ensureType pos e TCBool
+    tcheck (EUOp pos (OpUnaryInc _) e) = ensureType pos e TCInt
+    tcheck (EUOp pos (OpUnaryDec _) e) = ensureType pos e TCInt
     tcheck (EMul pos e1 _ e2) = ensureType pos e1 TCInt >> ensureType pos e2 TCInt
     tcheck (EAdd pos e1 _ e2) = ensureType pos e1 TCInt >> ensureType pos e2 TCInt
     tcheck (ERel pos e1 _ e2) = ensureType pos e1 TCInt >> ensureType pos e2 TCInt >> pure TCBool

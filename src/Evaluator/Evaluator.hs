@@ -180,6 +180,8 @@ instance Evaluator Expr where
         eval e >>= \case
             VBool b -> pure $ VBool $ not b
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
+    eval (EUOp pos (OpUnaryInc _) e) = eval $ makeCompoundAssignment pos e (OpPlus pos) (ELitInt pos 1)
+    eval (EUOp pos (OpUnaryDec _) e) = eval $ makeCompoundAssignment pos e (OpMinus pos) (ELitInt pos 1)
     eval (EMul pos e1 op e2) =
         evalBinary e1 e2 $ \case
             (VInt n1, VInt n2) -> case op of

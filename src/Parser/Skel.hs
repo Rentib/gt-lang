@@ -96,6 +96,8 @@ transUnaryOp x = case x of
   Parser.Abs.OpUnaryPlus _ -> failure x
   Parser.Abs.OpUnaryMinus _ -> failure x
   Parser.Abs.OpUnaryBang _ -> failure x
+  Parser.Abs.OpUnaryInc _ -> failure x
+  Parser.Abs.OpUnaryDec _ -> failure x
 
 transMulOp :: Show a => Parser.Abs.MulOp' a -> Result
 transMulOp x = case x of

@@ -94,7 +94,12 @@ data Expr' a
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type UnaryOp = UnaryOp' BNFC'Position
-data UnaryOp' a = OpUnaryPlus a | OpUnaryMinus a | OpUnaryBang a
+data UnaryOp' a
+    = OpUnaryPlus a
+    | OpUnaryMinus a
+    | OpUnaryBang a
+    | OpUnaryInc a
+    | OpUnaryDec a
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type MulOp = MulOp' BNFC'Position
@@ -218,6 +223,8 @@ instance HasPosition UnaryOp where
     OpUnaryPlus p -> p
     OpUnaryMinus p -> p
     OpUnaryBang p -> p
+    OpUnaryInc p -> p
+    OpUnaryDec p -> p
 
 instance HasPosition MulOp where
   hasPosition = \case

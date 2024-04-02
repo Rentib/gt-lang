@@ -64,6 +64,8 @@ separator       Expr "," ;
 OpUnaryPlus.    UnaryOp ::= "+" ;
 OpUnaryMinus.   UnaryOp ::= "-" ;
 OpUnaryBang.    UnaryOp ::= "!" ;
+OpUnaryInc.     UnaryOp ::= "++" ;
+OpUnaryDec.     UnaryOp ::= "--" ;
 
 OpTimes.        MulOp ::= "*" ;
 OpDiv.          MulOp ::= "/" ;
