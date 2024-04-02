@@ -114,7 +114,13 @@ data EqOp' a = OpEq a | OpNeq a
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type AssignOp = AssignOp' BNFC'Position
-data AssignOp' a = OpAssign a
+data AssignOp' a
+    = OpAssign a
+    | OpAssignTimes a
+    | OpAssignDiv a
+    | OpAssignMod a
+    | OpAssignPlus a
+    | OpAssignMinus a
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 newtype Ident = Ident String
@@ -239,4 +245,9 @@ instance HasPosition EqOp where
 instance HasPosition AssignOp where
   hasPosition = \case
     OpAssign p -> p
+    OpAssignTimes p -> p
+    OpAssignDiv p -> p
+    OpAssignMod p -> p
+    OpAssignPlus p -> p
+    OpAssignMinus p -> p
 

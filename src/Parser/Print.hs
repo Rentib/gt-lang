@@ -276,3 +276,8 @@ instance Print (Parser.Abs.EqOp' a) where
 instance Print (Parser.Abs.AssignOp' a) where
   prt i = \case
     Parser.Abs.OpAssign _ -> prPrec i 0 (concatD [doc (showString "=")])
+    Parser.Abs.OpAssignTimes _ -> prPrec i 0 (concatD [doc (showString "*=")])
+    Parser.Abs.OpAssignDiv _ -> prPrec i 0 (concatD [doc (showString "/=")])
+    Parser.Abs.OpAssignMod _ -> prPrec i 0 (concatD [doc (showString "%=")])
+    Parser.Abs.OpAssignPlus _ -> prPrec i 0 (concatD [doc (showString "+=")])
+    Parser.Abs.OpAssignMinus _ -> prPrec i 0 (concatD [doc (showString "-=")])

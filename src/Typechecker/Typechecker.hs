@@ -8,6 +8,7 @@ import Control.Monad.State
 
 import Parser.Abs
 
+import Common.Utils
 import Common.Exceptions
 import Typechecker.Datatypes
 
@@ -145,13 +146,13 @@ instance Typechecker Expr where
     tcheck (EEq pos e1 _ e2) = tcheck e1 >>= ensureType pos e2 >> pure TCBool
     tcheck (EAnd pos e1 e2) = ensureType pos e1 TCBool >> ensureType pos e2 TCBool
     tcheck (EOr pos e1 e2) = ensureType pos e1 TCBool >> ensureType pos e2 TCBool
-    tcheck (EAssign pos1 (EIdent pos2 x) _ e) = do
+    tcheck (EAssign pos1 (EIdent pos2 x) (OpAssign _) e) = do
         ts <- get
         case tsGet x ts of -- NOTE: dont use tcheck, as it drops qualifiers
             Just (TCConst _, _) -> throwError $ AssignmentToReadOnlyVariable pos1 x
             Just (t, _) -> modify (tsPut x (t, TSInitialized)) >> ensureType pos1 e t
             Nothing -> throwError $ UndeclaredVariableGTException pos2 x
-    tcheck (EAssign pos (EIndex _ (EIdent _ x) idx) _ e) = do
+    tcheck (EAssign pos (EIndex _ (EIdent _ x) idx) (OpAssign _) e) = do
         ts <- get
         case tsGet x ts of
             Just (TCArray t, _) -> do
@@ -160,6 +161,11 @@ instance Typechecker Expr where
                 ensureType pos e t
             Just _ -> throwError $ NotAnArrayGTException pos
             Nothing -> throwError $ UndeclaredVariableGTException pos x
+    tcheck (EAssign pos1 e1 (OpAssignTimes pos2) e2) = tcheck $ makeCompoundAssignment pos1 e1 (OpTimes pos2) e2
+    tcheck (EAssign pos1 e1 (OpAssignDiv pos2) e2) = tcheck $ makeCompoundAssignment pos1 e1 (OpDiv pos2) e2
+    tcheck (EAssign pos1 e1 (OpAssignMod pos2) e2) = tcheck $ makeCompoundAssignment pos1 e1 (OpMod pos2) e2
+    tcheck (EAssign pos1 e1 (OpAssignPlus pos2) e2) = tcheck $ makeCompoundAssignment pos1 e1 (OpPlus pos2) e2
+    tcheck (EAssign pos1 e1 (OpAssignMinus pos2) e2) = tcheck $ makeCompoundAssignment pos1 e1 (OpMinus pos2) e2
     tcheck (EAssign pos _ _ _) = throwError $ NotImplementedGTException pos
     tcheck (ELambda pos params ret block) = do
         let f = DFunc pos (Ident "") params ret block

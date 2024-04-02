@@ -123,3 +123,8 @@ transEqOp x = case x of
 transAssignOp :: Show a => Parser.Abs.AssignOp' a -> Result
 transAssignOp x = case x of
   Parser.Abs.OpAssign _ -> failure x
+  Parser.Abs.OpAssignTimes _ -> failure x
+  Parser.Abs.OpAssignDiv _ -> failure x
+  Parser.Abs.OpAssignMod _ -> failure x
+  Parser.Abs.OpAssignPlus _ -> failure x
+  Parser.Abs.OpAssignMinus _ -> failure x

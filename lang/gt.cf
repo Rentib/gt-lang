@@ -81,7 +81,11 @@ OpEq.           EqOp ::= "==" ;
 OpNeq.          EqOp ::= "!=" ;
 
 OpAssign.       AssignOp ::=  "=" ;
--- TODO: add more assign operators
+OpAssignTimes.  AssignOp ::= "*=" ;
+OpAssignDiv.    AssignOp ::= "/=" ;
+OpAssignMod.    AssignOp ::= "%=" ;
+OpAssignPlus.   AssignOp ::= "+=" ;
+OpAssignMinus.  AssignOp ::= "-=" ;
 
 comment         "//" ;
 comment         "/*" "*/" ;

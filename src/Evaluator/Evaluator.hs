@@ -8,6 +8,7 @@ import Control.Monad.State
 import Data.Array
 
 import Common.Exceptions
+import Common.Utils
 import Evaluator.Datatypes
 import Parser.Abs
 
@@ -210,8 +211,8 @@ instance Evaluator Expr where
                 OpNeq _ -> v1 /= v2
     eval (EAnd _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then eval e2 else pure v1
     eval (EOr _ e1 e2) = eval e1 >>= \v1 -> if v1 == VBool True then pure v1 else eval e2
-    eval (EAssign _ (EIdent _ x) _ e) = eval e >>= \v -> modify (esUpdate x v) >> pure v
-    eval (EAssign pos (EIndex _ (EIdent _ x) idx) _ e) = do
+    eval (EAssign _ (EIdent _ x) (OpAssign _) e) = eval e >>= \v -> modify (esUpdate x v) >> pure v
+    eval (EAssign pos (EIndex _ (EIdent _ x) idx) (OpAssign _) e) = do
         -- FIXME: for now only one-dimensional arrays are supported
         arr <- gets $ esGet x
         i <- eval idx
@@ -221,6 +222,11 @@ instance Evaluator Expr where
                 void $ checkBounds pos a i'
                 modify (esUpdate x (VArray (a // [(i', v)]))) >> pure v
             _ | otherwise -> throwError $ UnknownRuntimeGTException pos
+    eval (EAssign pos1 e1 (OpAssignTimes pos2) e2) = eval $ makeCompoundAssignment pos1 e1 (OpTimes pos2) e2
+    eval (EAssign pos1 e1 (OpAssignDiv pos2) e2) = eval $ makeCompoundAssignment pos1 e1 (OpDiv pos2) e2
+    eval (EAssign pos1 e1 (OpAssignMod pos2) e2) = eval $ makeCompoundAssignment pos1 e1 (OpMod pos2) e2
+    eval (EAssign pos1 e1 (OpAssignPlus pos2) e2) = eval $ makeCompoundAssignment pos1 e1 (OpPlus pos2) e2
+    eval (EAssign pos1 e1 (OpAssignMinus pos2) e2) = eval $ makeCompoundAssignment pos1 e1 (OpMinus pos2) e2
     eval (EAssign pos _ _ _) = throwError $ UnknownRuntimeGTException pos
     eval (ELambda _ args _ block) = gets (VFunc (Ident "") args block . env)
     eval (EEmpty _) = pure VVoid
