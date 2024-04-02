@@ -8,8 +8,8 @@ import Control.Monad.State
 
 import Parser.Abs
 
-import Common.Utils
 import Common.Exceptions
+import Common.Utils
 import Typechecker.Datatypes
 
 typecheck :: TranslationUnit -> Either GTException ()
@@ -21,16 +21,12 @@ class Typechecker a where
     tcheck :: a -> TypecheckM
 
 ensureType :: BNFC'Position -> Expr -> TCType -> TypecheckM
-ensureType pos e t = do
-    et <- tcheck e
-    unless (et == t) $ throwError $ WrongTypeGTException pos (show t) (show et)
-    pure t
+ensureType pos e t =
+    tcheck e >>= \et -> unless (et == t) (throwError $ WrongTypeGTException pos (show t) (show et)) >> pure t
 
 tcheckBuiltin :: BNFC'Position -> Expr -> [Expr] -> TypecheckM -> TypecheckM
 tcheckBuiltin _ (EIdent _ (Ident "print")) args _ = mapM_ tcheck args >> pure TCVoid
-tcheckBuiltin pos (EIdent _ (Ident "malloc")) [n] _ = do
-    void $ ensureType pos n TCInt
-    pure $ TCArray TCVoid
+tcheckBuiltin pos (EIdent _ (Ident "malloc")) [n] _ = void (ensureType pos n TCInt) >> pure (TCArray TCVoid)
 tcheckBuiltin pos (EIdent _ (Ident "malloc")) args _ =
     throwError $ WrongNumberOfArgumentsGTException pos 1 (length args)
 tcheckBuiltin _ _ _ tm = tm
@@ -46,8 +42,7 @@ instance Typechecker TranslationUnit where
 instance Typechecker Block where
     tcheck (PBlock _ decls instrs) = do
         ts <- get
-        mapM_ tcheck decls
-        mapM_ tcheck instrs
+        mapM_ tcheck decls >> mapM_ tcheck instrs
         ts' <- get
         put $ ts'{_env = _env ts}
         pure TCInt
