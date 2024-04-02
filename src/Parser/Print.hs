@@ -174,14 +174,32 @@ instance Print (Parser.Abs.Block' a) where
 
 instance Print (Parser.Abs.Decl' a) where
   prt i = \case
-    Parser.Abs.DNoInit _ id_ type_ -> prPrec i 0 (concatD [doc (showString "var"), prt 0 id_, doc (showString ":"), prt 0 type_, doc (showString ";")])
-    Parser.Abs.DInit _ id_ expr -> prPrec i 0 (concatD [doc (showString "var"), prt 0 id_, doc (showString "="), prt 0 expr, doc (showString ";")])
-    Parser.Abs.DConst _ id_ expr -> prPrec i 0 (concatD [doc (showString "const"), prt 0 id_, doc (showString "="), prt 0 expr, doc (showString ";")])
+    Parser.Abs.DVar _ ditems -> prPrec i 0 (concatD [doc (showString "var"), prt 0 ditems, doc (showString ";")])
+    Parser.Abs.DConst _ ditemconsts -> prPrec i 0 (concatD [doc (showString "const"), prt 0 ditemconsts, doc (showString ";")])
     Parser.Abs.DFunc _ id_ args type_ block -> prPrec i 0 (concatD [doc (showString "fn"), prt 0 id_, doc (showString "("), prt 0 args, doc (showString ")"), doc (showString "->"), prt 0 type_, prt 0 block])
 
 instance Print [Parser.Abs.Decl' a] where
   prt _ [] = concatD []
   prt _ (x:xs) = concatD [prt 0 x, prt 0 xs]
+
+instance Print (Parser.Abs.DItem' a) where
+  prt i = \case
+    Parser.Abs.DItemNoInit _ id_ type_ -> prPrec i 0 (concatD [prt 0 id_, doc (showString ":"), prt 0 type_])
+    Parser.Abs.DItemInit _ id_ expr -> prPrec i 0 (concatD [prt 0 id_, doc (showString "="), prt 0 expr])
+
+instance Print [Parser.Abs.DItem' a] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
+instance Print (Parser.Abs.DItemConst' a) where
+  prt i = \case
+    Parser.Abs.DItemConstInit _ id_ expr -> prPrec i 0 (concatD [prt 0 id_, doc (showString "="), prt 0 expr])
+
+instance Print [Parser.Abs.DItemConst' a] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
 instance Print (Parser.Abs.Instr' a) where
   prt i = \case

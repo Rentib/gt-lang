@@ -43,10 +43,18 @@ data Block' a = PBlock a [Decl' a] [Instr' a]
 
 type Decl = Decl' BNFC'Position
 data Decl' a
-    = DNoInit a Ident (Type' a)
-    | DInit a Ident (Expr' a)
-    | DConst a Ident (Expr' a)
+    = DVar a [DItem' a]
+    | DConst a [DItemConst' a]
     | DFunc a Ident [Arg' a] (Type' a) (Block' a)
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
+
+type DItem = DItem' BNFC'Position
+data DItem' a
+    = DItemNoInit a Ident (Type' a) | DItemInit a Ident (Expr' a)
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
+
+type DItemConst = DItemConst' BNFC'Position
+data DItemConst' a = DItemConstInit a Ident (Expr' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Instr = Instr' BNFC'Position
@@ -152,10 +160,18 @@ instance HasPosition Block where
 
 instance HasPosition Decl where
   hasPosition = \case
-    DNoInit p _ _ -> p
-    DInit p _ _ -> p
-    DConst p _ _ -> p
+    DVar p _ -> p
+    DConst p _ -> p
     DFunc p _ _ _ _ -> p
+
+instance HasPosition DItem where
+  hasPosition = \case
+    DItemNoInit p _ _ -> p
+    DItemInit p _ _ -> p
+
+instance HasPosition DItemConst where
+  hasPosition = \case
+    DItemConstInit p _ _ -> p
 
 instance HasPosition Instr where
   hasPosition = \case

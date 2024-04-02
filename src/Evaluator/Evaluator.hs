@@ -32,9 +32,15 @@ instance Evaluator Block where
         pure VVoid
 
 instance Evaluator Decl where
-    eval (DNoInit _ x _) = modify (esNew x VUninitialized) >> pure VVoid
-    eval (DInit _ x e) = eval e >>= \v -> modify (esNew x v) >> pure VVoid
-    eval (DConst _ x e) = eval e >>= \v -> modify (esNew x v) >> pure VVoid
+    eval (DVar _ xs) = do
+        let addItem :: DItem -> EvalM
+            addItem (DItemNoInit _ x _) = modify (esNew x VUninitialized) >> pure VVoid
+            addItem (DItemInit _ x e) = eval e >>= \v -> modify (esNew x v) >> pure VVoid
+        mapM_ addItem xs >> pure VVoid
+    eval (DConst _ xs) = do
+        let addItem :: DItemConst -> EvalM
+            addItem (DItemConstInit _ x e) = eval e >>= \v -> modify (esNew x v) >> pure VVoid
+        mapM_ addItem xs >> pure VVoid
     eval (DFunc _ fname args _ block) = do
         es <- get
         modify $ esNew fname (VFunc fname args block (env es))

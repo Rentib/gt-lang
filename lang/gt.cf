@@ -17,11 +17,16 @@ separator       Arg "," ;
 
 PBlock.         Block ::= "{" [Decl] [Instr] "}" ;
 
-DNoInit.        Decl ::= "var" Ident ":" Type ";" ;
-DInit.          Decl ::= "var" Ident "=" Expr ";" ;
-DConst.         Decl ::= "const" Ident "=" Expr ";" ;
+DVar.           Decl ::= "var"   [DItem] ";" ;
+DConst.         Decl ::= "const" [DItemConst] ";" ;
 DFunc.          Decl ::= "fn" Ident "(" [Arg] ")" "->" Type Block ;
 separator       Decl "" ;
+
+DItemNoInit.    DItem ::= Ident ":" Type ;
+DItemInit.      DItem ::= Ident "=" Expr ;
+separator       nonempty DItem "," ;
+DItemConstInit. DItemConst ::= Ident "=" Expr ;
+separator       nonempty DItemConst "," ;
 
 IBlock.         Instr ::= Block ;
 IExpr.          Instr ::= Expr ";" ;

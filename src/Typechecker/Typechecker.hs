@@ -52,9 +52,15 @@ instance Typechecker Block where
         pure TCInt
 
 instance Typechecker Decl where
-    tcheck (DNoInit _ x t) = modify (tsPut x (fromType t, TSUninitialized)) >> pure TCInt
-    tcheck (DInit _ x e) = tcheck e >>= \et -> modify (tsPut x (et, TSInitialized)) >> pure TCInt
-    tcheck (DConst _ x e) = tcheck e >>= \et -> modify (tsPut x (TCConst et, TSInitialized)) >> pure TCInt
+    tcheck (DVar _ xs) = do
+        let addItem :: DItem -> TypecheckM
+            addItem (DItemNoInit _ x t) = modify (tsPut x (fromType t, TSUninitialized)) >> pure TCInt
+            addItem (DItemInit _ x e) = tcheck e >>= \et -> modify (tsPut x (et, TSInitialized)) >> pure TCInt
+        mapM_ addItem xs >> pure TCVoid
+    tcheck (DConst _ xs) = do
+        let addItem :: DItemConst -> TypecheckM
+            addItem (DItemConstInit _ x e) = tcheck e >>= \et -> modify (tsPut x (TCConst et, TSInitialized)) >> pure TCInt
+        mapM_ addItem xs >> pure TCVoid
     tcheck (DFunc pos f args ret block) = do
         modify $ tsPut f (fromFunction args ret, TSInitialized)
         ts <- get

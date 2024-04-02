@@ -44,10 +44,18 @@ transBlock x = case x of
 
 transDecl :: Show a => Parser.Abs.Decl' a -> Result
 transDecl x = case x of
-  Parser.Abs.DNoInit _ ident type_ -> failure x
-  Parser.Abs.DInit _ ident expr -> failure x
-  Parser.Abs.DConst _ ident expr -> failure x
+  Parser.Abs.DVar _ ditems -> failure x
+  Parser.Abs.DConst _ ditemconsts -> failure x
   Parser.Abs.DFunc _ ident args type_ block -> failure x
+
+transDItem :: Show a => Parser.Abs.DItem' a -> Result
+transDItem x = case x of
+  Parser.Abs.DItemNoInit _ ident type_ -> failure x
+  Parser.Abs.DItemInit _ ident expr -> failure x
+
+transDItemConst :: Show a => Parser.Abs.DItemConst' a -> Result
+transDItemConst x = case x of
+  Parser.Abs.DItemConstInit _ ident expr -> failure x
 
 transInstr :: Show a => Parser.Abs.Instr' a -> Result
 transInstr x = case x of
