@@ -151,18 +151,14 @@ instance Evaluator Expr where
         put $ es{env = fenv}
         mapM_ esPutArg $ zip3 params arg_values arg_locs
 
-        -- recursion, FIXME: doesnt work after function assignment
+        -- recursion
         modify $ esNew fname f
-        -- void $ case e of
-        --     EIdent _ (Ident fname) -> modify (esNew (Ident fname) f)
-        --     _ | otherwise -> pure ()
 
         void $ eval block
         res <- gets esGetFlag
         es' <- get
-        put $ es{store = store es'} -- TODO: check if it is correct
+        put $ es{store = store es'}
 
-        -- TODO: if there is no return, check if function should return void
         case res of
             ESFReturn v -> pure v
             ESFNone -> pure VVoid
