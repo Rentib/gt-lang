@@ -44,25 +44,25 @@ instance Typechecker Block where
         ts <- get
         mapM_ tcheck decls >> mapM_ tcheck instrs
         ts' <- get
-        put $ ts'{_env = _env ts}
+        put $ ts'{env = env ts}
         pure TCInt
 
 instance Typechecker Decl where
     tcheck (DVar _ xs) = do
         let addItem :: DItem -> TypecheckM
-            addItem (DItemNoInit _ x t) = modify (tsPut x (fromType t, TSUninitialized)) >> pure TCInt
-            addItem (DItemInit _ x e) = tcheck e >>= \et -> modify (tsPut x (et, TSInitialized)) >> pure TCInt
+            addItem (DItemNoInit _ x t) = modify (tsNew x (fromType t, TSUninitialized)) >> pure TCInt
+            addItem (DItemInit _ x e) = tcheck e >>= \et -> modify (tsNew x (et, TSInitialized)) >> pure TCInt
         mapM_ addItem xs >> pure TCVoid
     tcheck (DConst _ xs) = do
         let addItem :: DItemConst -> TypecheckM
-            addItem (DItemConstInit _ x e) = tcheck e >>= \et -> modify (tsPut x (TCConst et, TSInitialized)) >> pure TCInt
+            addItem (DItemConstInit _ x e) = tcheck e >>= \et -> modify (tsNew x (TCConst et, TSInitialized)) >> pure TCInt
         mapM_ addItem xs >> pure TCVoid
     tcheck (DFunc pos f args ret block) = do
-        modify $ tsPut f (fromFunction args ret, TSInitialized)
+        modify $ tsNew f (fromFunction args ret, TSInitialized)
         ts <- get
         put $ ts{_retType = fromType ret, _hasReturn = False, _inLoop = False}
-        let addArg (PArgVal _ x t) = tsPut x (fromType t, TSInitialized)
-            addArg (PArgRef _ x t) = tsPut x (fromType t, TSInitialized)
+        let addArg (PArgVal _ x t) = tsNew x (fromType t, TSInitialized)
+            addArg (PArgRef _ x t) = tsNew x (fromType t, TSInitialized)
         mapM_ (modify . addArg) args
         void $ tcheck block
         ts' <- get
@@ -147,14 +147,14 @@ instance Typechecker Expr where
         ts <- get
         case tsGet x ts of -- NOTE: dont use tcheck, as it drops qualifiers
             Just (TCConst _, _) -> throwError $ AssignmentToReadOnlyVariable pos1 x
-            Just (t, _) -> modify (tsPut x (t, TSInitialized)) >> ensureType pos1 e t
+            Just (t, _) -> modify (tsUpdate x (t, TSInitialized)) >> ensureType pos1 e t
             Nothing -> throwError $ UndeclaredVariableGTException pos2 x
     tcheck (EAssign pos (EIndex _ (EIdent _ x) idx) (OpAssign _) e) = do
         ts <- get
         case tsGet x ts of
             Just (TCArray t, _) -> do
                 void $ ensureType pos idx TCInt
-                modify (tsPut x (TCArray t, TSInitialized))
+                modify (tsUpdate x (TCArray t, TSInitialized))
                 ensureType pos e t
             Just _ -> throwError $ NotAnArrayGTException pos
             Nothing -> throwError $ UndeclaredVariableGTException pos x

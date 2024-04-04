@@ -3,8 +3,9 @@
 
 module Typechecker.Datatypes where
 
-import Data.Map as Map (Map, empty, insert, lookup)
+import Common.EnvStore
 
+import Data.Maybe
 import Parser.Abs
 
 data TCType where
@@ -70,21 +71,33 @@ data TCState where
 
 type TCValue = (TCType, TCState)
 
-data Env where
-    Env ::
-        { _env :: Map.Map Ident TCValue
+data TypecheckerState where
+    TypecheckerState ::
+        { env :: Env
+        , store :: Store TCValue
         , _retType :: TCType
         , _hasReturn :: Bool
         , _inLoop :: Bool
         } ->
-        Env
+        TypecheckerState
 
-type TypecheckerState = Env
+tsEmpty :: TypecheckerState
+tsEmpty = TypecheckerState envEmpty storeEmpty TCVoid False False
 
-tsEmpty :: Env
-tsEmpty = Env Map.empty TCVoid False False
+tsNew :: Ident -> TCValue -> TypecheckerState -> TypecheckerState
+tsNew x v TypecheckerState{..} = TypecheckerState{env = env', store = store', ..}
+  where
+    (store'', l) = storeNewLoc store
+    env' = envPut x l env
+    store' = storePut l v store''
 
-tsPut :: Ident -> TCValue -> Env -> Env
-tsPut x v Env{..} = Env{_env = Map.insert x v _env, ..}
-tsGet :: Ident -> Env -> Maybe TCValue
-tsGet x Env{..} = Map.lookup x _env
+tsUpdate :: Ident -> TCValue -> TypecheckerState -> TypecheckerState
+tsUpdate x v TypecheckerState{..} = TypecheckerState{env = env, store = store', ..}
+  where
+    l = fromJust $ envGet x env
+    store' = storePut l v store
+
+tsGet :: Ident -> TypecheckerState -> Maybe TCValue
+tsGet x TypecheckerState{..} = case envGet x env of
+    Just l -> storeGet l store
+    Nothing -> Nothing
