@@ -3,9 +3,10 @@
 
 module Evaluator.Datatypes where
 
+import Common.EnvStore
 import Data.Array
-import Data.Map as Map
 
+import Data.Maybe
 import Parser.Abs
 
 data Value where
@@ -56,37 +57,13 @@ data EvaluatorStateFlag where
     ESFContinue :: EvaluatorStateFlag
     ESFBreak :: EvaluatorStateFlag
 
-type Loc = Integer
-data Env where Env :: {_env :: Map Ident Loc} -> Env
-data Store where Store :: {_store :: Map Loc Value, _newloc :: Loc} -> Store
 data EvaluatorState where
     EvaluatorState ::
         { env :: Env
-        , store :: Store
+        , store :: Store Value
         , flag :: EvaluatorStateFlag
         } ->
         EvaluatorState
-
-envEmpty :: Env
-envEmpty = Env Map.empty
-
-envPut :: Ident -> Loc -> Env -> Env
-envPut x l (Env e) = Env $ Map.insert x l e
-
-envGet :: Ident -> Env -> Loc
-envGet x (Env e) = e Map.! x
-
-storeEmpty :: Store
-storeEmpty = Store Map.empty 0
-
-storePut :: Loc -> Value -> Store -> Store
-storePut l v (Store s n) = Store (Map.insert l v s) n
-
-storeGet :: Loc -> Store -> Value
-storeGet l (Store s _) = s Map.! l
-
-storeNewLoc :: Store -> (Store, Loc)
-storeNewLoc (Store s l) = (Store s (l + 1), l)
 
 esEmpty :: EvaluatorState
 esEmpty = EvaluatorState envEmpty storeEmpty ESFNone
@@ -101,11 +78,11 @@ esNew x v EvaluatorState{..} = EvaluatorState env' store' flag
 esUpdate :: Ident -> Value -> EvaluatorState -> EvaluatorState
 esUpdate x v EvaluatorState{..} = EvaluatorState env store' flag
   where
-    l = envGet x env
+    l = fromJust $ envGet x env
     store' = storePut l v store
 
 esGet :: Ident -> EvaluatorState -> Value
-esGet x EvaluatorState{..} = storeGet (envGet x env) store
+esGet x EvaluatorState{..} = fromJust $ storeGet (fromJust (envGet x env)) store
 
 esGetFlag :: EvaluatorState -> EvaluatorStateFlag
 esGetFlag EvaluatorState{..} = flag

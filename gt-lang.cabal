@@ -67,6 +67,7 @@ library
                       Parser.Skel
                       Common.Exceptions
                       Common.Utils
+                      Common.EnvStore
                       Evaluator.Evaluator
                       Evaluator.Datatypes
                       Typechecker.Typechecker

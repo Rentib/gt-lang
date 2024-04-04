@@ -7,6 +7,7 @@ import Control.Monad.Except
 import Control.Monad.State
 import Data.Array
 
+import Common.EnvStore
 import Common.Exceptions
 import Common.Utils
 import Evaluator.Datatypes
@@ -136,7 +137,7 @@ instance Evaluator Expr where
         when (length params /= length args) $ throwError $ UnknownRuntimeGTException pos
         es <- get
         -- gets location of argument (for passing by reference)
-        let getLoc (EIdent _ x) = Just $ envGet x (env es)
+        let getLoc (EIdent _ x) = envGet x (env es)
             getLoc _ = Nothing
         let esPutArg :: (Arg, Value, Maybe Loc) -> EvalM
             esPutArg (PArgRef _ x _, _, Just l) =
