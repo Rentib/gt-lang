@@ -1,7 +1,7 @@
 fn main() -> int {
     const n = 1000;
-    var primes = ([int])malloc(n), primes_cnt = 0;
-    var sieve = ([bool])malloc(n);
+    var primes = <[int]>malloc(n), primes_cnt = 0;
+    var sieve = <[bool]>malloc(n);
     var i : int, j : int; 
 
     for (i = 2; i < n; ++i) {

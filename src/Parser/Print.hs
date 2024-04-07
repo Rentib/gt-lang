@@ -227,7 +227,7 @@ instance Print (Parser.Abs.Expr' a) where
     Parser.Abs.EIdent _ id_ -> prPrec i 9 (concatD [prt 0 id_])
     Parser.Abs.EIndex _ expr1 expr2 -> prPrec i 9 (concatD [prt 9 expr1, doc (showString "["), prt 1 expr2, doc (showString "]")])
     Parser.Abs.EApply _ expr exprs -> prPrec i 9 (concatD [prt 9 expr, doc (showString "("), prt 1 exprs, doc (showString ")")])
-    Parser.Abs.ECast _ type_ expr -> prPrec i 8 (concatD [doc (showString "("), prt 0 type_, doc (showString ")"), prt 9 expr])
+    Parser.Abs.ECast _ type_ expr -> prPrec i 8 (concatD [doc (showString "<"), prt 0 type_, doc (showString ">"), prt 9 expr])
     Parser.Abs.EUOp _ unaryop expr -> prPrec i 8 (concatD [prt 0 unaryop, prt 9 expr])
     Parser.Abs.EMul _ expr1 mulop expr2 -> prPrec i 7 (concatD [prt 7 expr1, prt 0 mulop, prt 8 expr2])
     Parser.Abs.EAdd _ expr1 addop expr2 -> prPrec i 6 (concatD [prt 6 expr1, prt 0 addop, prt 7 expr2])

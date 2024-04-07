@@ -48,7 +48,8 @@ ELitFalse.      Expr9 ::= "false" ;
 EIdent.         Expr9 ::= Ident ;
 EIndex.         Expr9 ::= Expr9 "[" Expr1 "]" ;
 EApply.         Expr9 ::= Expr9 "(" [Expr1] ")" ;
-ECast.          Expr8 ::= "(" Type ")" Expr9 ;
+-- Unfortunately cstyle cast causes conflicts 
+ECast.          Expr8 ::= "<" Type ">" Expr9 ;
 EUOp.           Expr8 ::= UnaryOp Expr9 ;
 EMul.           Expr7 ::= Expr7 MulOp Expr8 ;
 EAdd.           Expr6 ::= Expr6 AddOp Expr7 ;
