@@ -185,7 +185,7 @@ instance Print [Parser.Abs.Decl' a] where
 instance Print (Parser.Abs.DItem' a) where
   prt i = \case
     Parser.Abs.DItemNoInit _ id_ type_ -> prPrec i 0 (concatD [prt 0 id_, doc (showString ":"), prt 0 type_])
-    Parser.Abs.DItemInit _ id_ expr -> prPrec i 0 (concatD [prt 0 id_, doc (showString "="), prt 0 expr])
+    Parser.Abs.DItemInit _ id_ expr -> prPrec i 0 (concatD [prt 0 id_, doc (showString "="), prt 1 expr])
 
 instance Print [Parser.Abs.DItem' a] where
   prt _ [] = concatD []
@@ -194,7 +194,7 @@ instance Print [Parser.Abs.DItem' a] where
 
 instance Print (Parser.Abs.DItemConst' a) where
   prt i = \case
-    Parser.Abs.DItemConstInit _ id_ expr -> prPrec i 0 (concatD [prt 0 id_, doc (showString "="), prt 0 expr])
+    Parser.Abs.DItemConstInit _ id_ expr -> prPrec i 0 (concatD [prt 0 id_, doc (showString "="), prt 1 expr])
 
 instance Print [Parser.Abs.DItemConst' a] where
   prt _ [] = concatD []
@@ -205,10 +205,10 @@ instance Print (Parser.Abs.Instr' a) where
   prt i = \case
     Parser.Abs.IBlock _ block -> prPrec i 0 (concatD [prt 0 block])
     Parser.Abs.IExpr _ expr -> prPrec i 0 (concatD [prt 0 expr, doc (showString ";")])
-    Parser.Abs.IIf _ expr instr -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 instr])
-    Parser.Abs.IIfElse _ expr instr1 instr2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 instr1, doc (showString "else"), prt 0 instr2])
-    Parser.Abs.IWhile _ expr instr -> prPrec i 0 (concatD [doc (showString "while"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 instr])
-    Parser.Abs.IFor _ expr1 expr2 expr3 instr -> prPrec i 0 (concatD [doc (showString "for"), doc (showString "("), prt 0 expr1, doc (showString ";"), prt 0 expr2, doc (showString ";"), prt 0 expr3, doc (showString ")"), prt 0 instr])
+    Parser.Abs.IIf _ expr instr -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 1 expr, doc (showString ")"), prt 0 instr])
+    Parser.Abs.IIfElse _ expr instr1 instr2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 1 expr, doc (showString ")"), prt 0 instr1, doc (showString "else"), prt 0 instr2])
+    Parser.Abs.IWhile _ expr instr -> prPrec i 0 (concatD [doc (showString "while"), doc (showString "("), prt 1 expr, doc (showString ")"), prt 0 instr])
+    Parser.Abs.IFor _ expr1 expr2 expr3 instr -> prPrec i 0 (concatD [doc (showString "for"), doc (showString "("), prt 0 expr1, doc (showString ";"), prt 1 expr2, doc (showString ";"), prt 0 expr3, doc (showString ")"), prt 0 instr])
     Parser.Abs.IContinue _ -> prPrec i 0 (concatD [doc (showString "continue"), doc (showString ";")])
     Parser.Abs.IBreak _ -> prPrec i 0 (concatD [doc (showString "break"), doc (showString ";")])
     Parser.Abs.IReturn _ expr -> prPrec i 0 (concatD [doc (showString "return"), prt 0 expr, doc (showString ";")])
@@ -225,8 +225,8 @@ instance Print (Parser.Abs.Expr' a) where
     Parser.Abs.ELitTrue _ -> prPrec i 9 (concatD [doc (showString "true")])
     Parser.Abs.ELitFalse _ -> prPrec i 9 (concatD [doc (showString "false")])
     Parser.Abs.EIdent _ id_ -> prPrec i 9 (concatD [prt 0 id_])
-    Parser.Abs.EIndex _ expr1 expr2 -> prPrec i 9 (concatD [prt 9 expr1, doc (showString "["), prt 0 expr2, doc (showString "]")])
-    Parser.Abs.EApply _ expr exprs -> prPrec i 9 (concatD [prt 9 expr, doc (showString "("), prt 0 exprs, doc (showString ")")])
+    Parser.Abs.EIndex _ expr1 expr2 -> prPrec i 9 (concatD [prt 9 expr1, doc (showString "["), prt 1 expr2, doc (showString "]")])
+    Parser.Abs.EApply _ expr exprs -> prPrec i 9 (concatD [prt 9 expr, doc (showString "("), prt 1 exprs, doc (showString ")")])
     Parser.Abs.ECast _ type_ expr -> prPrec i 8 (concatD [doc (showString "("), prt 0 type_, doc (showString ")"), prt 9 expr])
     Parser.Abs.EUOp _ unaryop expr -> prPrec i 8 (concatD [prt 0 unaryop, prt 9 expr])
     Parser.Abs.EMul _ expr1 mulop expr2 -> prPrec i 7 (concatD [prt 7 expr1, prt 0 mulop, prt 8 expr2])
@@ -236,13 +236,13 @@ instance Print (Parser.Abs.Expr' a) where
     Parser.Abs.EAnd _ expr1 expr2 -> prPrec i 3 (concatD [prt 3 expr1, doc (showString "&&"), prt 4 expr2])
     Parser.Abs.EOr _ expr1 expr2 -> prPrec i 2 (concatD [prt 2 expr1, doc (showString "||"), prt 3 expr2])
     Parser.Abs.EAssign _ expr1 assignop expr2 -> prPrec i 1 (concatD [prt 9 expr1, prt 0 assignop, prt 2 expr2])
-    Parser.Abs.ELambda _ args type_ block -> prPrec i 0 (concatD [doc (showString "\\"), doc (showString "("), prt 0 args, doc (showString ")"), doc (showString "->"), prt 0 type_, doc (showString "=>"), prt 0 block])
+    Parser.Abs.ELambda _ args type_ block -> prPrec i 1 (concatD [doc (showString "\\"), doc (showString "("), prt 0 args, doc (showString ")"), doc (showString "->"), prt 0 type_, doc (showString "=>"), prt 0 block])
     Parser.Abs.EEmpty _ -> prPrec i 0 (concatD [])
 
 instance Print [Parser.Abs.Expr' a] where
   prt _ [] = concatD []
-  prt _ [x] = concatD [prt 0 x]
-  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+  prt _ [x] = concatD [prt 1 x]
+  prt _ (x:xs) = concatD [prt 1 x, doc (showString ","), prt 1 xs]
 
 instance Print (Parser.Abs.UnaryOp' a) where
   prt i = \case
