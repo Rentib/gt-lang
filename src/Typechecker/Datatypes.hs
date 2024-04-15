@@ -78,11 +78,12 @@ data TypecheckerState where
         , _retType :: TCType
         , _hasReturn :: Bool
         , _inLoop :: Bool
+        , _blockLoc :: Loc
         } ->
         TypecheckerState
 
 tsEmpty :: TypecheckerState
-tsEmpty = TypecheckerState envEmpty storeEmpty TCVoid False False
+tsEmpty = TypecheckerState envEmpty storeEmpty TCVoid False False 0
 
 tsNew :: Ident -> TCValue -> TypecheckerState -> TypecheckerState
 tsNew x v TypecheckerState{..} = TypecheckerState{env = env', store = store', ..}
@@ -101,3 +102,12 @@ tsGet :: Ident -> TypecheckerState -> Maybe TCValue
 tsGet x TypecheckerState{..} = case envGet x env of
     Just l -> storeGet l store
     Nothing -> Nothing
+
+tsSetBlockLoc :: TypecheckerState -> TypecheckerState
+tsSetBlockLoc ts@TypecheckerState{..} = ts{_blockLoc = _newloc store}
+
+tsGetBlockLoc :: TypecheckerState -> Loc
+tsGetBlockLoc TypecheckerState{..} = _blockLoc
+
+tsGetLoc :: Ident -> TypecheckerState -> Maybe Loc
+tsGetLoc x TypecheckerState{..} = envGet x env

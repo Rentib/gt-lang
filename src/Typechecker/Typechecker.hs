@@ -42,22 +42,33 @@ instance Typechecker TranslationUnit where
 instance Typechecker Block where
     tcheck (PBlock _ decls instrs) = do
         ts <- get
+        modify tsSetBlockLoc
         mapM_ tcheck decls >> mapM_ tcheck instrs
         ts' <- get
-        put $ ts'{env = env ts}
+        put $ ts'{env = env ts, _blockLoc = _blockLoc ts}
         pure TCInt
+
+checkRedeclared :: BNFC'Position -> Ident -> TypecheckM
+checkRedeclared pos x = do
+    ts <- get
+    case tsGetLoc x ts of
+        Just l -> do
+            if x == Ident "" || l < _blockLoc ts
+                then pure TCInt
+                else throwError $ RedeclaredVariableGTException pos x
+        Nothing -> pure TCInt
 
 instance Typechecker Decl where
     tcheck (DVar _ xs) = do
         let addItem :: DItem -> TypecheckM
-            addItem (DItemNoInit _ x t) = modify (tsNew x (fromType t, TSUninitialized)) >> pure TCInt
-            addItem (DItemInit _ x e) = tcheck e >>= \et -> modify (tsNew x (et, TSInitialized)) >> pure TCInt
+            addItem (DItemNoInit pos x t) = checkRedeclared pos x >> modify (tsNew x (fromType t, TSUninitialized)) >> pure TCInt
+            addItem (DItemInit pos x e) = checkRedeclared pos x >> tcheck e >>= \et -> modify (tsNew x (et, TSInitialized)) >> pure TCInt
         mapM_ addItem xs >> pure TCVoid
     tcheck (DConst _ xs) = do
         let addItem :: DItemConst -> TypecheckM
-            addItem (DItemConstInit _ x e) = tcheck e >>= \et -> modify (tsNew x (TCConst et, TSInitialized)) >> pure TCInt
+            addItem (DItemConstInit pos x e) = checkRedeclared pos x >> tcheck e >>= \et -> modify (tsNew x (TCConst et, TSInitialized)) >> pure TCInt
         mapM_ addItem xs >> pure TCVoid
-    tcheck (DFunc pos f args ret block) = do
+    tcheck (DFunc pos f args ret block) = checkRedeclared pos f >> do
         modify $ tsNew f (fromFunction args ret, TSInitialized)
         ts <- get
         put $ ts{_retType = fromType ret, _hasReturn = False, _inLoop = False}
