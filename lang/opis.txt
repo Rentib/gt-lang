@@ -1,0 +1,42 @@
+GT to silnie typowany język imperatywny.
+Typy: int, bool, char, void oraz tablice.
+Tablice mogą być dowolnego typu. Napisy są reprezentowane jako [char].
+Do elementów tablicy można się odwoływać za pomocą tablica[indeks], przy czym
+działa to bardziej jak funkcja, czyli zwraca wartość i nie można tego
+przekazywać jako referencje. Można natomiast przypisywać wartości poprzez
+tablica[indeks] = wyrażenie.
+if, if else, for, while, return, continue, break jak w C, przy czym warunki
+muszą być typu bool. (nie można zrobić if (1) ..., ale można if (true) ...).
+Instrukcje break i continue nie mogą być poza pętlą.
+Warto też wspomnieć, że instrukcja if else powoduje konflikt shift/reduce, który
+jest traktowany jak w C, czyli else odnosi się do najgłębszej instrukcji if.
+Przypisanie jak w C (nie jest instrukcją, tylko wyrażeniem).
+Dodatkowo jest +=, -=, *=, /=, %=.
+Typy można rzutować poprzez <typ>wyrażenie
+Nie można rzutować tablicy na podstawowy typ, ani podstawowego typu na
+tablicę. Można natomiast rzutować tablicę typu T na tablicę typu V o ile T można
+rzutować na V. Rzutowanie prymitywnych typów działa jak w C. Dodatkowo można
+rzutować void na int oraz int na void. void rzutowany na int daje 0. Rzutowanie
+void na inne typ T tak jak rzutowanie 0 na T.
+GT ma dwie wbudowane instrukcje.
+print(...) - przyjmuje dowolną liczbę argumentów dowolnego typu i je wypisuje
+malloc(N) tworzy N elementową tablicę [void].
+Nie ma free, bo system operacyjny sam zwalnia pamięć na koniec.
+Wszystkie deklaracje muszą być na początku bloku przed jakąkolwiek instrukcją.
+Przy czym blok jest też instrukcją, więc można zrobić np
+{
+    var x = 0;
+    {
+        var x = true;
+    }
+}
+Zmienne read-only działają podobnie do const w C. Można odrzucić kwalifikator
+const poprzez przekazanie zmiennej read-only jako referencji i zmienienie jej
+typu na taki sam bez kwalifikatora (jest przykład).
+Można tworzyć zmienne typu funkcji oraz je wywoływać. Funkcje mogą być
+rekurencyjne i nie psuje się to przy przypisaniu np
+fn f(n : int) -> int { if (n == 0) return 1; return n * f(n - 1); }
+...
+var x = f; // x(10) == f(10);
+Funkcje anonimowe działają podobnie do funkcji anonimowych w C++ z przekazaniem
+całego środowiska za pomocą [&].
